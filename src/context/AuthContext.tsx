@@ -29,14 +29,7 @@ type AuthContextValue = {
   openAuth: (message?: string) => void;
   closeAuth: () => void;
   authMessage: string | null;
-  requestLink: (email: string) => Promise<{
-    ok: boolean;
-    message: string;
-  }>;
-  verifyOtpCode: (
-    email: string,
-    token: string
-  ) => Promise<{ ok: boolean; message: string }>;
+  signInWithGoogle: () => Promise<{ ok: boolean; message: string }>;
   logout: () => Promise<void>;
   refreshAuth: () => Promise<void>;
   setPrefs: (prefs: UserPrefs | null) => void;
@@ -146,11 +139,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!auth) return;
     if (auth === "ok") {
       void refreshAuth();
-      setAuthMessage("Signed in with Supabase. Likes and Saves sync to your account.");
+      setAuthMessage("Signed in with Google. Likes and Saves sync to your account.");
       setAuthOpen(false);
     } else if (auth === "expired") {
       setAuthOpen(true);
-      setAuthMessage("That sign-in link expired. Request a new one.");
+      setAuthMessage("Google sign-in failed or expired. Try again.");
     }
     params.delete("auth");
     const next = `${window.location.pathname}${
@@ -172,78 +165,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     (message?: string) => {
       if (!configured) {
         openAuth(
-          "Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to .env.local, then restart the app."
+          "Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY, then restart."
         );
         return false;
       }
       if (user) return true;
-      openAuth(message ?? "Sign in with email to like and save items.");
+      openAuth(message ?? "Sign in with Google to like and save items.");
       return false;
     },
     [configured, user, openAuth]
   );
 
-  const requestLink = useCallback(
-    async (email: string) => {
-      if (!configured) {
-        return {
-          ok: false,
-          message:
-            "Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.",
-        };
-      }
-
-      const supabase = createClient();
-      const redirectTo = `${window.location.origin}/auth/callback`;
-      const { error } = await supabase.auth.signInWithOtp({
-        email: email.trim().toLowerCase(),
-        options: {
-          emailRedirectTo: redirectTo,
-          shouldCreateUser: true,
+  const signInWithGoogle = useCallback(async () => {
+    if (!configured) {
+      return { ok: false, message: "Supabase is not configured." };
+    }
+    const supabase = createClient();
+    const redirectTo = `${window.location.origin}/auth/callback`;
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo,
+        queryParams: {
+          access_type: "offline",
+          prompt: "consent",
         },
-      });
-
-      if (error) {
-        return { ok: false, message: error.message };
-      }
-
-      return {
-        ok: true,
-        message:
-          "We emailed a 6–8 digit code (and sometimes a link). Prefer entering the code below — links may fail if Site URL is wrong.",
-      };
-    },
-    [configured]
-  );
-
-  const verifyOtpCode = useCallback(
-    async (email: string, token: string) => {
-      if (!configured) {
-        return { ok: false, message: "Supabase is not configured." };
-      }
-      const supabase = createClient();
-      const cleaned = token.replace(/\s+/g, "");
-      const { error } = await supabase.auth.verifyOtp({
-        email: email.trim().toLowerCase(),
-        token: cleaned,
-        type: "email",
-      });
-      if (error) {
-        // Signup confirmation emails sometimes use type "signup"
-        const retry = await supabase.auth.verifyOtp({
-          email: email.trim().toLowerCase(),
-          token: cleaned,
-          type: "signup",
-        });
-        if (retry.error) {
-          return { ok: false, message: error.message };
-        }
-      }
-      await refreshAuth();
-      return { ok: true, message: "Signed in." };
-    },
-    [configured, refreshAuth]
-  );
+      },
+    });
+    if (error) {
+      return { ok: false, message: error.message };
+    }
+    return { ok: true, message: "Redirecting to Google…" };
+  }, [configured]);
 
   const logout = useCallback(async () => {
     if (!configured) return;
@@ -265,8 +218,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       openAuth,
       closeAuth,
       authMessage,
-      requestLink,
-      verifyOtpCode,
+      signInWithGoogle,
       logout,
       refreshAuth,
       setPrefs,
@@ -283,8 +235,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       openAuth,
       closeAuth,
       authMessage,
-      requestLink,
-      verifyOtpCode,
+      signInWithGoogle,
       logout,
       refreshAuth,
       requireAuth,

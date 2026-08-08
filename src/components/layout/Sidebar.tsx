@@ -105,14 +105,14 @@ export function Sidebar() {
           <div className="rounded-[6px] bg-[var(--bg-overlay)] p-3">
             <div className="label mb-1">Account</div>
             <p className="body-sm mb-2">
-              Supabase email login syncs likes, saves, and personalized ranking.
+              Google sign-in syncs likes, saves, and personalized ranking.
             </p>
             <button
               type="button"
               onClick={() => openAuth()}
               className="w-full rounded-[6px] bg-[var(--cta)] px-2.5 py-1.5 text-[12px] font-semibold text-[var(--cta-text)]"
             >
-              Sign in with email
+              Sign in with Google
             </button>
           </div>
         )}

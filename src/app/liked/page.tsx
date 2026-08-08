@@ -39,7 +39,7 @@ export default function LikedPage() {
         user
           ? undefined
           : {
-              label: "Sign in with email",
+              label: "Sign in with Google",
               onClick: () => openAuth(),
             }
       }

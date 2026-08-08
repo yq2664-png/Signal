@@ -27,7 +27,7 @@ export default function SavedPage() {
         user
           ? undefined
           : {
-              label: "Sign in with email",
+              label: "Sign in with Google",
               onClick: () => openAuth(),
             }
       }
