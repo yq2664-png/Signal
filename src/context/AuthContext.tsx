@@ -33,6 +33,10 @@ type AuthContextValue = {
     ok: boolean;
     message: string;
   }>;
+  verifyOtpCode: (
+    email: string,
+    token: string
+  ) => Promise<{ ok: boolean; message: string }>;
   logout: () => Promise<void>;
   refreshAuth: () => Promise<void>;
   setPrefs: (prefs: UserPrefs | null) => void;
@@ -206,10 +210,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return {
         ok: true,
         message:
-          "Check your inbox for a Supabase magic link. After you click it, likes and saves will sync.",
+          "We emailed a 6–8 digit code (and sometimes a link). Prefer entering the code below — links may fail if Site URL is wrong.",
       };
     },
     [configured]
+  );
+
+  const verifyOtpCode = useCallback(
+    async (email: string, token: string) => {
+      if (!configured) {
+        return { ok: false, message: "Supabase is not configured." };
+      }
+      const supabase = createClient();
+      const cleaned = token.replace(/\s+/g, "");
+      const { error } = await supabase.auth.verifyOtp({
+        email: email.trim().toLowerCase(),
+        token: cleaned,
+        type: "email",
+      });
+      if (error) {
+        // Signup confirmation emails sometimes use type "signup"
+        const retry = await supabase.auth.verifyOtp({
+          email: email.trim().toLowerCase(),
+          token: cleaned,
+          type: "signup",
+        });
+        if (retry.error) {
+          return { ok: false, message: error.message };
+        }
+      }
+      await refreshAuth();
+      return { ok: true, message: "Signed in." };
+    },
+    [configured, refreshAuth]
   );
 
   const logout = useCallback(async () => {
@@ -233,6 +266,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       closeAuth,
       authMessage,
       requestLink,
+      verifyOtpCode,
       logout,
       refreshAuth,
       setPrefs,
@@ -250,6 +284,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       closeAuth,
       authMessage,
       requestLink,
+      verifyOtpCode,
       logout,
       refreshAuth,
       requireAuth,
