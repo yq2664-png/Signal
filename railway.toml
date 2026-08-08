@@ -1,6 +1,7 @@
 [build]
 builder = "NIXPACKS"
-buildCommand = "npm ci && npm run build"
+# Install + build without npm ci (ci hits EBUSY on Railway cache mounts)
+buildCommand = "npm install --no-audit --no-fund && npm run build"
 
 [deploy]
 startCommand = "npm run start"
