@@ -1,0 +1,16 @@
+# Copy these into Railway → Variables (do not commit real values)
+
+PORT=3000
+CACHE_DIR=/data/cache
+
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+
+OPENAI_API_KEY=
+GITHUB_TOKEN=
+YOUTUBE_API_KEY=
+X_BEARER_TOKEN=
+
+# optional
+OPENAI_MODEL=gpt-4o-mini
+OPENAI_ENRICH_LIMIT=20
