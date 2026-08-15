@@ -42,3 +42,17 @@ export function CategoryBadge({ category }: { category: string }) {
     </Badge>
   );
 }
+
+export function ValueCueBadge({
+  cue,
+}: {
+  cue: "High Impact" | "New Capability" | "Developer Signal";
+}) {
+  const tone =
+    cue === "High Impact"
+      ? "tier-high"
+      : cue === "New Capability"
+        ? "tier-emerging"
+        : "tier-trend";
+  return <Badge className={tone}>{cue}</Badge>;
+}

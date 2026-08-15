@@ -1,0 +1,154 @@
+{
+  "now": "2026-08-15T12:00:00.000Z",
+  "expectedCounts": { "PUBLISH": 4, "WATCH": 3, "NOT_INSIGHT": 11 },
+  "clusters": [
+    {
+      "id": "coding-agent-onboarding",
+      "expected": "PUBLISH",
+      "items": [
+        { "kind": "ol", "id": "ol-minimax-m2", "source": "MiniMax", "orgTag": "minimax", "title": "MiniMax M2 & Agent: Ingenious in Simplicity", "publishedAt": "2026-08-10T00:00:00.000Z" },
+        { "kind": "ol", "id": "ol-kimi-k25", "source": "Kimi", "orgTag": "moonshot", "title": "Kimi K2.5 Visual Agentic Intelligence", "publishedAt": "2026-08-12T00:00:00.000Z" },
+        { "kind": "ol", "id": "ol-grok-46", "source": "xAI", "orgTag": "xai", "title": "Introducing Grok 4.6", "publishedAt": "2026-08-13T00:00:00.000Z" },
+        { "kind": "dc", "id": "dc-claude-install", "title": "claude-code: install and platform setup is blocking adoption", "products": ["claude-code"], "topic": "install-platform", "signalType": "FRICTION", "status": "PUBLISH", "lastSeenAt": "2026-08-14T00:00:00.000Z" },
+        { "kind": "dc", "id": "dc-opencode-install", "title": "opencode: install and platform setup is blocking adoption", "products": ["opencode"], "topic": "install-platform", "signalType": "FRICTION", "status": "PUBLISH", "lastSeenAt": "2026-08-14T00:00:00.000Z" }
+      ]
+    },
+    {
+      "id": "tool-calling",
+      "expected": "PUBLISH",
+      "items": [
+        { "kind": "dc", "id": "dc-claude-tools", "title": "claude-code: tool calling is breaking multi-turn agent workflows", "products": ["claude-code"], "topic": "tool-calling", "signalType": "FRICTION", "status": "PUBLISH", "lastSeenAt": "2026-08-14T00:00:00.000Z" },
+        { "kind": "dc", "id": "dc-cline-tools", "title": "cline: tool calling is breaking multi-turn agent workflows", "products": ["cline"], "topic": "tool-calling", "signalType": "FRICTION", "status": "WATCH", "reason": "capped", "lastSeenAt": "2026-08-14T00:00:00.000Z" }
+      ]
+    },
+    {
+      "id": "session-memory",
+      "expected": "PUBLISH",
+      "items": [
+        { "kind": "ol", "id": "ol-minimax-m3", "source": "MiniMax", "orgTag": "minimax", "title": "MiniMax M3: Frontier Coding, 1M Context, Native Multimodality", "publishedAt": "2026-08-11T00:00:00.000Z" },
+        { "kind": "dc", "id": "dc-claude-session", "title": "claude-code: session state is dropping across turns", "products": ["claude-code"], "topic": "session-failure", "signalType": "FRICTION", "status": "PUBLISH", "lastSeenAt": "2026-08-14T00:00:00.000Z" },
+        { "kind": "dc", "id": "dc-opencode-memory", "title": "opencode: memory and context overhead is changing how agents are operated", "products": ["opencode"], "topic": "memory-context", "signalType": "FRICTION", "status": "WATCH", "reason": "capped", "lastSeenAt": "2026-08-14T00:00:00.000Z" }
+      ]
+    },
+    {
+      "id": "coding-agent-convergence",
+      "expected": "PUBLISH",
+      "items": [
+        { "kind": "ol", "id": "ol-minimax-agent", "source": "MiniMax", "orgTag": "minimax", "title": "MiniMax M2 & Agent: Ingenious in Simplicity", "publishedAt": "2026-08-10T00:00:00.000Z" },
+        { "kind": "ol", "id": "ol-kimi-visual", "source": "Kimi", "orgTag": "moonshot", "title": "Kimi K2.5 Visual Agentic Intelligence", "publishedAt": "2026-08-12T00:00:00.000Z" },
+        { "kind": "ol", "id": "ol-mistral-vibe", "source": "Mistral AI", "orgTag": "mistral", "title": "Vibe gets to work.", "publishedAt": "2026-08-09T00:00:00.000Z" },
+        { "kind": "ol", "id": "ol-xai-build", "source": "xAI", "orgTag": "xai", "title": "Introducing Build Mode", "publishedAt": "2026-08-08T00:00:00.000Z" }
+      ]
+    },
+    {
+      "id": "multimodal-agent",
+      "expected": "WATCH",
+      "items": [
+        { "kind": "ol", "id": "ol-kimi-mm", "source": "Kimi", "orgTag": "moonshot", "title": "Kimi K2.5 Visual Agentic Intelligence", "publishedAt": "2026-08-12T00:00:00.000Z" },
+        { "kind": "ol", "id": "ol-minimax-mm", "source": "MiniMax", "orgTag": "minimax", "title": "MiniMax M3: Frontier Coding, 1M Context, Native Multimodality", "publishedAt": "2026-08-11T00:00:00.000Z" }
+      ]
+    },
+    {
+      "id": "mcp-runtime",
+      "expected": "WATCH",
+      "items": [
+        { "kind": "dc", "id": "dc-mcp-1", "title": "mcp: runtime reliability is a recurring production friction", "products": ["mcp"], "topic": "mcp-runtime", "signalType": "FRICTION", "status": "WATCH", "reason": "capped", "lastSeenAt": "2026-08-14T00:00:00.000Z" },
+        { "kind": "dc", "id": "dc-mcp-2", "title": "mcp: transport and reconnect failures are showing up in production", "products": ["mcp"], "topic": "reliability-transport", "signalType": "FRICTION", "status": "WATCH", "reason": "capped", "lastSeenAt": "2026-08-13T00:00:00.000Z" }
+      ]
+    },
+    {
+      "id": "kimi-pair",
+      "expected": "NOT_INSIGHT",
+      "items": [
+        { "kind": "ol", "id": "ol-kimi-a", "source": "Kimi", "orgTag": "moonshot", "title": "Kimi K2.5 Visual Agentic Intelligence", "publishedAt": "2026-08-12T00:00:00.000Z" },
+        { "kind": "ol", "id": "ol-kimi-b", "source": "Kimi", "orgTag": "moonshot", "title": "Kimi K3 Open Frontier Intelligence", "publishedAt": "2026-08-13T00:00:00.000Z" }
+      ]
+    },
+    {
+      "id": "gemini-launch",
+      "expected": "NOT_INSIGHT",
+      "items": [
+        { "kind": "ol", "id": "ol-gemini", "source": "Google DeepMind", "orgTag": "google-deepmind", "title": "Introducing Gemini 3.7 Flash", "publishedAt": "2026-08-14T00:00:00.000Z" }
+      ]
+    },
+    {
+      "id": "grok-family",
+      "expected": "NOT_INSIGHT",
+      "items": [
+        { "kind": "ol", "id": "ol-grok-46b", "source": "xAI", "orgTag": "xai", "title": "Introducing Grok 4.6", "publishedAt": "2026-08-13T00:00:00.000Z" },
+        { "kind": "ol", "id": "ol-grok-build", "source": "xAI", "orgTag": "xai", "title": "Introducing Build Mode", "publishedAt": "2026-08-12T00:00:00.000Z" },
+        { "kind": "ol", "id": "ol-grok-copilot", "source": "xAI", "orgTag": "xai", "title": "Grok 4.5 in GitHub Copilot", "publishedAt": "2026-08-11T00:00:00.000Z" }
+      ]
+    },
+    {
+      "id": "unrelated-papers",
+      "expected": "NOT_INSIGHT",
+      "items": [
+        { "kind": "rp", "id": "rp-unimomo", "title": "UniMoMo: Expert Merging-Based MoE Acceleration for Large Recommendation Models", "publishedAt": "2026-08-12T00:00:00.000Z", "arxivId": "2608.08627" },
+        { "kind": "rp", "id": "rp-matraix", "title": "MatrAIx: Simulating the World with 8.3 Billion Persona Agents", "publishedAt": "2026-08-11T00:00:00.000Z", "arxivId": "2608.04205" }
+      ]
+    },
+    {
+      "id": "agents-topic-bag",
+      "expected": "NOT_INSIGHT",
+      "items": [
+        { "kind": "rp", "id": "rp-persona", "title": "MatrAIx: Simulating the World with 8.3 Billion Persona Agents", "publishedAt": "2026-08-11T00:00:00.000Z", "arxivId": "2608.04205" },
+        { "kind": "rp", "id": "rp-governance", "title": "Researchers propose governance model for AI agents", "publishedAt": "2026-08-10T00:00:00.000Z", "arxivId": "2608.00001" }
+      ]
+    },
+    {
+      "id": "sign-language",
+      "expected": "NOT_INSIGHT",
+      "items": [
+        { "kind": "ol", "id": "ol-sign", "source": "Google DeepMind", "orgTag": "google-deepmind", "title": "Putting sign language AI into users’ hands", "publishedAt": "2026-08-14T00:00:00.000Z" }
+      ]
+    },
+    {
+      "id": "minimax-cadence",
+      "expected": "NOT_INSIGHT",
+      "items": [
+        { "kind": "ol", "id": "ol-m2", "source": "MiniMax", "orgTag": "minimax", "title": "MiniMax M2 & Agent: Ingenious in Simplicity", "publishedAt": "2026-08-08T00:00:00.000Z" },
+        { "kind": "ol", "id": "ol-m3b", "source": "MiniMax", "orgTag": "minimax", "title": "MiniMax M3: Frontier Coding, 1M Context, Native Multimodality", "publishedAt": "2026-08-11T00:00:00.000Z" }
+      ]
+    },
+    {
+      "id": "agent-skills",
+      "expected": "WATCH",
+      "items": [
+        { "kind": "dc", "id": "dc-skills", "title": "opencode: agent workflow packaging is shifting how teams configure tools", "products": ["opencode"], "topic": "workflow-skills", "signalType": "WORKFLOW_SHIFT", "status": "WATCH", "reason": "capped", "lastSeenAt": "2026-08-14T00:00:00.000Z" },
+        { "kind": "dc", "id": "dc-skills-2", "title": "opencode: workflow-skills packaging is changing agent configuration", "products": ["opencode"], "topic": "workflow-skills", "signalType": "WORKFLOW_SHIFT", "status": "WATCH", "reason": "capped", "lastSeenAt": "2026-08-13T00:00:00.000Z" }
+      ]
+    },
+    {
+      "id": "realtime-voice",
+      "expected": "NOT_INSIGHT",
+      "items": [
+        { "kind": "ol", "id": "ol-voice", "source": "xAI", "orgTag": "xai", "title": "Introducing Grok Voice Think Fast 2.0", "publishedAt": "2026-08-10T00:00:00.000Z" }
+      ]
+    },
+    {
+      "id": "stale-qwen",
+      "expected": "NOT_INSIGHT",
+      "items": [
+        { "kind": "ol", "id": "ol-qwen-old", "source": "Qwen", "orgTag": "qwen", "title": "Qwen2.5 Omni: See, Hear, Talk, Write, Do It All!", "publishedAt": "2026-06-01T00:00:00.000Z" },
+        { "kind": "ol", "id": "ol-qwen-old2", "source": "Qwen", "orgTag": "qwen", "title": "Qwen3-Coder: Agentic Coding in the World", "publishedAt": "2026-06-02T00:00:00.000Z" }
+      ]
+    },
+    {
+      "id": "mistral-unrelated",
+      "expected": "NOT_INSIGHT",
+      "items": [
+        { "kind": "ol", "id": "ol-vibe", "source": "Mistral AI", "orgTag": "mistral", "title": "Vibe gets to work.", "publishedAt": "2026-08-09T00:00:00.000Z" },
+        { "kind": "ol", "id": "ol-robo", "source": "Mistral AI", "orgTag": "mistral", "title": "Introducing Robostral Navigate", "publishedAt": "2026-08-09T00:00:00.000Z" }
+      ]
+    },
+    {
+      "id": "weak-coincidence",
+      "expected": "NOT_INSIGHT",
+      "items": [
+        { "kind": "rp", "id": "rp-moe", "title": "UniMoMo: Expert Merging-Based MoE Acceleration for Large Recommendation Models", "publishedAt": "2026-08-12T00:00:00.000Z", "arxivId": "2608.08627" },
+        { "kind": "ol", "id": "ol-m27", "source": "MiniMax", "orgTag": "minimax", "title": "MiniMax M2.7: Early Echoes of Self-Evolution", "publishedAt": "2026-08-10T00:00:00.000Z" }
+      ]
+    }
+  ]
+}

@@ -1,28 +1,69 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Flag } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { useToast } from "@/components/ui/Toast";
 import type { BadCaseReason, FeedItem } from "@/lib/types";
 
 const REASONS: { id: BadCaseReason; label: string }[] = [
-  { id: "title", label: "标题差" },
-  { id: "summary", label: "摘要差" },
-  { id: "ranking", label: "排序不当" },
-  { id: "relevance", label: "不相关" },
-  { id: "other", label: "其他" },
+  { id: "title", label: "Unclear title" },
+  { id: "summary", label: "Unclear summary" },
+  { id: "ranking", label: "Wrong place in Feed" },
+  { id: "relevance", label: "Not relevant" },
+  { id: "other", label: "Other" },
 ];
 
-export function FlagBadCaseButton({ item }: { item: FeedItem }) {
+const STORAGE_KEY = "signal-bad-case-flags";
+
+type FlagMap = Record<string, { reason: BadCaseReason; at: string }>;
+
+function loadFlags(): FlagMap {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as FlagMap;
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveFlag(itemId: string, reason: BadCaseReason) {
+  const next = { ...loadFlags(), [itemId]: { reason, at: new Date().toISOString() } };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+}
+
+export function FlagBadCaseButton({
+  item,
+  quiet = false,
+}: {
+  item: FeedItem;
+  quiet?: boolean;
+}) {
+  const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState<BadCaseReason>("title");
   const [note, setNote] = useState("");
-  const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">(
-    "idle"
-  );
+  const [saving, setSaving] = useState(false);
+  const [flagged, setFlagged] = useState(false);
+  const [flaggedReason, setFlaggedReason] = useState<BadCaseReason | null>(null);
+
+  useEffect(() => {
+    const hit = loadFlags()[item.id];
+    if (hit) {
+      setFlagged(true);
+      setFlaggedReason(hit.reason);
+      setReason(hit.reason);
+    } else {
+      setFlagged(false);
+      setFlaggedReason(null);
+    }
+  }, [item.id]);
 
   const submit = async () => {
-    setStatus("saving");
+    setSaving(true);
     try {
       const res = await fetch("/api/bad-cases", {
         method: "POST",
@@ -30,25 +71,48 @@ export function FlagBadCaseButton({ item }: { item: FeedItem }) {
         body: JSON.stringify({ item, reason, note }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      setStatus("saved");
+      saveFlag(item.id, reason);
+      setFlagged(true);
+      setFlaggedReason(reason);
       setOpen(false);
       setNote("");
-      setTimeout(() => setStatus("idle"), 2000);
+      const label = REASONS.find((r) => r.id === reason)?.label ?? reason;
+      toast(`Flagged · ${label}`, "success");
     } catch {
-      setStatus("error");
+      toast("Couldn’t save the flag. Try again.", "error");
+    } finally {
+      setSaving(false);
     }
   };
 
   return (
     <div className="relative">
-      <Button
-        variant="subtle"
-        aria-label="Flag bad case"
-        onClick={() => setOpen((v) => !v)}
-      >
-        <Flag className="h-3.5 w-3.5" strokeWidth={1.75} />
-        {status === "saved" ? "Logged" : "Bad case"}
-      </Button>
+      {quiet ? (
+        <button
+          type="button"
+          aria-label={flagged ? "Already flagged" : "Flag this item"}
+          aria-pressed={flagged}
+          onClick={() => setOpen((v) => !v)}
+          className="text-[11px] text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
+        >
+          {flagged ? "Flagged" : "Flag"}
+        </button>
+      ) : (
+        <Button
+          variant="subtle"
+          aria-label={flagged ? "Bad case already flagged" : "Flag bad case"}
+          aria-pressed={flagged}
+          onClick={() => setOpen((v) => !v)}
+          className={flagged ? "text-[var(--status-label)]" : undefined}
+        >
+          <Flag
+            className="h-3.5 w-3.5"
+            strokeWidth={1.75}
+            fill={flagged ? "currentColor" : "none"}
+          />
+          {flagged ? "Flagged" : "Bad case"}
+        </Button>
+      )}
 
       {open ? (
         <div
@@ -57,7 +121,15 @@ export function FlagBadCaseButton({ item }: { item: FeedItem }) {
             boxShadow: "var(--inset-border), rgba(0,0,0,0.45) 0 8px 24px",
           }}
         >
-          <div className="label mb-1.5 px-1">Flag for strategy review</div>
+          <div className="label mb-1.5 px-1">
+            {flagged ? "Update flag" : "What’s wrong?"}
+          </div>
+          {flagged && flaggedReason ? (
+            <p className="mb-1.5 px-1 text-[11px] text-[var(--text-muted)]">
+              Already flagged ·{" "}
+              {REASONS.find((r) => r.id === flaggedReason)?.label ?? flaggedReason}
+            </p>
+          ) : null}
           <div className="flex flex-wrap gap-1">
             {REASONS.map((r) => (
               <button
@@ -77,7 +149,7 @@ export function FlagBadCaseButton({ item }: { item: FeedItem }) {
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="可选：期望标题 / 问题说明"
+            placeholder="Optional note"
             rows={2}
             className="mt-2 w-full resize-none rounded-[6px] bg-[var(--bg-overlay)] px-2 py-1.5 text-[12px] text-[var(--text-body)] outline-none placeholder:text-[var(--text-muted)]"
           />
@@ -85,19 +157,10 @@ export function FlagBadCaseButton({ item }: { item: FeedItem }) {
             <Button variant="ghost" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button
-              variant="primary"
-              disabled={status === "saving"}
-              onClick={submit}
-            >
-              {status === "saving" ? "Saving…" : "Submit"}
+            <Button variant="primary" disabled={saving} onClick={submit}>
+              {saving ? "Saving…" : flagged ? "Update" : "Submit"}
             </Button>
           </div>
-          {status === "error" ? (
-            <p className="mt-1 px-1 text-[11px] text-[var(--text-secondary)]">
-              Save failed — try again.
-            </p>
-          ) : null}
         </div>
       ) : null}
     </div>

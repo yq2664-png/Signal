@@ -1,0 +1,176 @@
+{
+  "items": [
+    {
+      "id": "ol-kimi-k25-oss",
+      "title": "Kimi K2.5 Visual Agentic Intelligence",
+      "source": "Kimi",
+      "publishedAt": "2026-08-14T12:00:00.000Z",
+      "category": "Model Releases",
+      "kind": "open-weight-foundation-model",
+      "officialLaunch": {
+        "eventId": "ol-kimi-k25-oss",
+        "eventType": "open-source-release",
+        "model": "Kimi K2.5"
+      }
+    },
+    {
+      "id": "ol-gpt-51-standard",
+      "title": "Introducing GPT-5.1",
+      "source": "OpenAI",
+      "publishedAt": "2026-08-13T12:00:00.000Z",
+      "category": "Model Releases",
+      "kind": "standard-model-release",
+      "officialLaunch": {
+        "eventId": "ol-gpt-51-standard",
+        "eventType": "model-release",
+        "model": "GPT-5.1"
+      }
+    },
+    {
+      "id": "ol-build-mode",
+      "title": "Introducing Build Mode",
+      "source": "xAI",
+      "publishedAt": "2026-08-12T12:00:00.000Z",
+      "category": "AI Products",
+      "kind": "product-launch",
+      "officialLaunch": {
+        "eventId": "ol-build-mode",
+        "eventType": "product-launch",
+        "product": "Build Mode"
+      }
+    },
+    {
+      "id": "ol-muse-av",
+      "title": "Introducing Muse Image and Muse Video",
+      "source": "Meta AI",
+      "publishedAt": "2026-08-11T12:00:00.000Z",
+      "category": "AI Products",
+      "kind": "product-launch",
+      "officialLaunch": {
+        "eventId": "ol-muse-av",
+        "eventType": "product-launch",
+        "product": "Muse Image"
+      }
+    },
+    {
+      "id": "ol-sign-language",
+      "title": "Putting sign language AI into users’ hands",
+      "source": "Google DeepMind",
+      "publishedAt": "2026-08-10T12:00:00.000Z",
+      "category": "AI Products",
+      "kind": "product-launch",
+      "officialLaunch": {
+        "eventId": "ol-sign-language",
+        "eventType": "product-launch",
+        "product": "SL2T"
+      }
+    },
+    {
+      "id": "ol-grok-bot",
+      "title": "Introducing Grok Bot",
+      "source": "xAI",
+      "publishedAt": "2026-08-12T10:00:00.000Z",
+      "category": "AI Products",
+      "kind": "product-launch",
+      "officialLaunch": {
+        "eventId": "ol-grok-bot",
+        "eventType": "model-release",
+        "product": "Grok Bot",
+        "model": "Grok"
+      }
+    },
+    {
+      "id": "ol-shieldstral-v11",
+      "title": "Introducing Shieldstral.",
+      "source": "Mistral AI",
+      "publishedAt": "2026-08-08T12:00:00.000Z",
+      "category": "AI Products",
+      "kind": "product-launch",
+      "officialLaunch": {
+        "eventId": "ol-shieldstral-v11",
+        "eventType": "model-release",
+        "product": "Shieldstral",
+        "model": "Shieldstral"
+      }
+    },
+    {
+      "id": "ol-search-toolkit-oss",
+      "title": "Search Toolkit is now open source",
+      "source": "Mistral AI",
+      "publishedAt": "2026-08-09T12:00:00.000Z",
+      "category": "Tools",
+      "kind": "generic-oss-project",
+      "officialLaunch": {
+        "eventId": "ol-search-toolkit-oss",
+        "eventType": "open-source-release",
+        "product": "Search Toolkit"
+      }
+    },
+    {
+      "id": "ol-announcement",
+      "title": "Announcement",
+      "source": "OpenAI",
+      "publishedAt": "2026-08-15T12:00:00.000Z",
+      "category": "Model Releases",
+      "kind": "residue",
+      "officialLaunch": {
+        "eventId": "ol-announcement",
+        "eventType": "model-release",
+        "model": "GPT-5.6"
+      }
+    },
+    {
+      "id": "ol-july-recap",
+      "title": "The latest AI news we announced in July 2026",
+      "source": "Google DeepMind",
+      "publishedAt": "2026-08-08T12:00:00.000Z",
+      "category": "AI Products",
+      "kind": "residue",
+      "officialLaunch": {
+        "eventId": "ol-july-recap",
+        "eventType": "product-launch"
+      }
+    },
+    {
+      "id": "dc-opencode-install-v11",
+      "title": "opencode: install and platform setup is blocking adoption",
+      "source": "Developer Community",
+      "publishedAt": "2026-08-15T10:00:00.000Z",
+      "category": "Industry Trends",
+      "kind": "adoption-friction",
+      "tags": ["developer-community", "friction", "install-platform", "opencode"],
+      "native": {
+        "authorName": "opencode",
+        "subtitle": "FRICTION · 7 evidence · 2d",
+        "comments": 7
+      }
+    },
+    {
+      "id": "rp-matraix-v11",
+      "title": "MatrAIx: Simulating the World with 8.3 Billion Persona Agents",
+      "source": "arXiv",
+      "publishedAt": "2026-07-22T00:00:00.000Z",
+      "category": "Research Papers",
+      "kind": "capability-paper",
+      "researchPaper": { "arxivId": "matraix-v11", "relevanceCue": "Agents" }
+    },
+    {
+      "id": "rp-unimomo-medium",
+      "title": "UniMoMo: Expert Merging-Based MoE Acceleration for Large Recommendation Models",
+      "source": "arXiv",
+      "publishedAt": "2026-08-14T00:00:00.000Z",
+      "category": "Research Papers",
+      "kind": "medium-paper",
+      "researchPaper": { "arxivId": "unimomo", "relevanceCue": "Systems" }
+    },
+    {
+      "id": "gh-star-project",
+      "title": "awesome-agents/awesome-agents",
+      "source": "GitHub · Projects",
+      "publishedAt": "2026-08-15T11:00:00.000Z",
+      "category": "Tools",
+      "kind": "generic-oss-connector",
+      "native": { "stars": 240000, "repoName": "awesome-agents/awesome-agents" }
+    }
+  ]
+}

@@ -41,6 +41,7 @@ function authorsOf(entry: Record<string, unknown>): string[] {
     .slice(0, 4);
 }
 
+/** @deprecated Live Research Papers path is fetchResearchPaperFeedItems. Kept for reference only. */
 export async function fetchArxiv(limit = 12): Promise<FeedItem[]> {
   const url =
     "https://export.arxiv.org/api/query?" +

@@ -30,15 +30,31 @@ export function rewriteFeedTitle(input: {
   let title = stripBoilerplate(rawTitle);
 
   // Prefer a sharper first sentence from summary when title is vague/short
-  if (title.length < 28 || isVagueTitle(title)) {
+  if (shouldUpgradeTitle(title, input.source)) {
     const fromSummary = firstSentence(summary, 110);
-    if (fromSummary && fromSummary.length > title.length) {
+    if (
+      fromSummary &&
+      fromSummary.length > title.length &&
+      !isBoilerplateSummary(fromSummary)
+    ) {
       title = fromSummary;
     }
   }
 
   title = firstSentence(title, 118) || title;
   return ensureHeadline(title);
+}
+
+function shouldUpgradeTitle(title: string, source: Source): boolean {
+  // Product Hunt launches are short product names on purpose
+  if (source === "Product Hunt") return false;
+  // Chinese headlines are often dense and short by character count
+  if (/[\u4e00-\u9fff]/.test(title) && title.length >= 8) return false;
+  return title.length < 28 || isVagueTitle(title);
+}
+
+function isBoilerplateSummary(s: string): boolean {
+  return /^(discussion\s*\|\s*link|read more|comments?|share)\b/i.test(s.trim());
 }
 
 function collapseWs(s: string): string {

@@ -13,6 +13,7 @@ import { loadUserPrefs } from "@/lib/library-api";
 import type { UserPrefs } from "@/lib/personalization";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { useToast } from "@/components/ui/Toast";
 
 export type AuthUser = {
   id: string;
@@ -44,8 +45,15 @@ function toAuthUser(id: string, email: string | undefined): AuthUser | null {
   return { id, email };
 }
 
+function sameUser(left: AuthUser | null, right: AuthUser | null): boolean {
+  if (left === right) return true;
+  if (!left || !right) return false;
+  return left.id === right.id && left.email === right.email;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const configured = isSupabaseConfigured();
+  const { toast } = useToast();
   const [ready, setReady] = useState(false);
   const [user, setUser] = useState<AuthUser | null>(null);
   const [prefs, setPrefs] = useState<UserPrefs | null>(null);
@@ -91,11 +99,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const {
         data: { user: sessionUser },
       } = await supabase.auth.getUser();
-      setUser(
-        sessionUser
+      setUser((prev) => {
+        const next = sessionUser
           ? toAuthUser(sessionUser.id, sessionUser.email ?? undefined)
-          : null
-      );
+          : null;
+        return sameUser(prev, next) ? prev : next;
+      });
       if (sessionUser) await hydrateLibrary();
       else {
         setPrefs(null);
@@ -120,7 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const next = session?.user
         ? toAuthUser(session.user.id, session.user.email ?? undefined)
         : null;
-      setUser(next);
+      setUser((prev) => (sameUser(prev, next) ? prev : next));
       if (next) await hydrateLibrary();
       else {
         setPrefs(null);
@@ -139,9 +148,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!auth) return;
     if (auth === "ok") {
       void refreshAuth();
-      setAuthMessage("Signed in with Google. Likes and Saves sync to your account.");
+      toast("Signed in. Likes and saves will sync.", "success");
+      setAuthMessage(null);
       setAuthOpen(false);
     } else if (auth === "expired") {
+      toast("Sign-in failed or expired. Try again.", "error");
       setAuthOpen(true);
       setAuthMessage("Google sign-in failed or expired. Try again.");
     }
@@ -150,7 +161,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       params.toString() ? `?${params}` : ""
     }`;
     window.history.replaceState({}, "", next);
-  }, [refreshAuth]);
+  }, [refreshAuth, toast]);
 
   const openAuth = useCallback((message?: string) => {
     setAuthMessage(message ?? null);
@@ -201,7 +212,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setPrefs(null);
     setCounts({ likes: 0, saves: 0 });
-  }, [configured]);
+    toast("Signed out.", "default");
+  }, [configured, toast]);
 
   const value = useMemo(
     () => ({

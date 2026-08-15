@@ -1,5 +1,6 @@
 import Parser from "rss-parser";
 import type { Category, FeedItem, Source } from "@/lib/types";
+import { fetchXinZhiYuan } from "@/lib/live/chinese-media";
 import { rewriteFeedTitle } from "@/lib/live/headlines";
 import { looksAiRelated, slugId, stripHtml, toFeedItem } from "@/lib/live/normalize";
 import { enrichOgImages } from "@/lib/live/og-image";
@@ -49,51 +50,6 @@ export type RssSourceConfig = {
 };
 
 export const RSS_SOURCES: RssSourceConfig[] = [
-  {
-    source: "OpenAI",
-    category: "AI Products",
-    url: "https://openai.com/news/rss.xml",
-    limit: 6,
-    tags: ["live", "openai", "rss"],
-    fetchOg: true,
-  },
-  {
-    source: "Anthropic",
-    category: "AI Products",
-    url: "https://raw.githubusercontent.com/taobojlen/anthropic-rss-feed/main/anthropic_news_rss.xml",
-    limit: 6,
-    tags: ["live", "anthropic", "rss"],
-    fetchOg: true,
-  },
-  {
-    source: "Google DeepMind",
-    category: "Research Papers",
-    url: "https://deepmind.google/blog/rss.xml",
-    limit: 6,
-    tags: ["live", "deepmind", "rss"],
-    fetchOg: true,
-  },
-  {
-    source: "DeepSeek",
-    category: "Model Releases",
-    url: "https://github.com/deepseek-ai/DeepSeek-V3/releases.atom",
-    limit: 4,
-    tags: ["live", "deepseek", "release"],
-  },
-  {
-    source: "DeepSeek",
-    category: "Model Releases",
-    url: "https://github.com/deepseek-ai/DeepSeek-R1/releases.atom",
-    limit: 3,
-    tags: ["live", "deepseek", "release"],
-  },
-  {
-    source: "Kimi",
-    category: "Model Releases",
-    url: "https://github.com/MoonshotAI/Kimi-K2/releases.atom",
-    limit: 4,
-    tags: ["live", "kimi", "moonshot", "release"],
-  },
   {
     source: "ByteDance",
     category: "Model Releases",
@@ -181,6 +137,31 @@ export const RSS_SOURCES: RssSourceConfig[] = [
     url: "https://spectrum.ieee.org/feeds/topic/robotics.rss",
     limit: 5,
     tags: ["live", "ieee", "robotics", "embodied", "rss"],
+    fetchOg: true,
+  },
+  // CN site paywalled; Synced Review is 机器之心 English outlet
+  {
+    source: "机器之心",
+    category: "Industry Trends",
+    url: "https://syncedreview.com/feed/",
+    limit: 6,
+    tags: ["live", "jiqizhixin", "synced", "rss"],
+    fetchOg: true,
+  },
+  {
+    source: "量子位",
+    category: "Industry Trends",
+    url: "https://www.qbitai.com/feed",
+    limit: 6,
+    tags: ["live", "qbitai", "rss"],
+    fetchOg: true,
+  },
+  {
+    source: "Product Hunt",
+    category: "AI Products",
+    url: "https://www.producthunt.com/feed?category=artificial-intelligence",
+    limit: 8,
+    tags: ["live", "producthunt", "launch", "rss"],
     fetchOg: true,
   },
 ];
@@ -365,6 +346,9 @@ export async function fetchRssFeed(config: RssSourceConfig): Promise<FeedItem[]>
 }
 
 export async function fetchAllRss(): Promise<FeedItem[]> {
-  const batches = await Promise.all(RSS_SOURCES.map((cfg) => fetchRssFeed(cfg)));
+  const batches = await Promise.all([
+    ...RSS_SOURCES.map((cfg) => fetchRssFeed(cfg)),
+    fetchXinZhiYuan(6),
+  ]);
   return batches.flat();
 }

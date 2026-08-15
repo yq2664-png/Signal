@@ -24,7 +24,7 @@ export function SavedBoardPage({
 }) {
   const { items: liveItems } = useFeed();
   const [selectedId, setSelectedId] = useState("");
-  const [briefOpen, setBriefOpen] = useState(true);
+  const [briefOpen, setBriefOpen] = useState(false);
 
   const resolved = useMemo(() => {
     const liveById = new Map(liveItems.map((item) => [item.id, item]));

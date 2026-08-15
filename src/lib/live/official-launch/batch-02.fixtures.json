@@ -1,0 +1,161 @@
+{
+  "googleRss": "<?xml version=\"1.0\" encoding=\"utf-8\"?><rss version=\"2.0\"><channel><title>Google DeepMind</title><item><title>Introducing Gemini 3.5 Flash Cyber</title><link>https://deepmind.google/blog/introducing-gemini-3-5-flash-cyber/</link><guid>https://deepmind.google/blog/introducing-gemini-3-5-flash-cyber/</guid><pubDate>Tue, 21 Jul 2026 12:00:00 GMT</pubDate><description>Gemini 3.5 Flash Cyber is now available to approved defenders.</description></item><item><title>Google DeepMind is hiring research scientists</title><link>https://deepmind.google/blog/hiring-research-scientists/</link><guid>https://deepmind.google/blog/hiring-research-scientists/</guid><pubDate>Mon, 20 Jul 2026 12:00:00 GMT</pubDate><description>Join our team to build the next model.</description></item></channel></rss>",
+  "googleCrossChannel": [
+    {
+      "id": "google-news:gemini-3.5",
+      "organizationId": "google-deepmind",
+      "channelId": "google-deepmind-news",
+      "sourceType": "newsroom",
+      "authority": 95,
+      "role": "primary",
+      "title": "Introducing Gemini 3.5 Flash",
+      "summary": "Gemini 3.5 Flash is a new model available today in Google AI Studio.",
+      "url": "https://deepmind.google/blog/introducing-gemini-3-5-flash/",
+      "canonicalUrl": "https://deepmind.google/blog/introducing-gemini-3-5-flash",
+      "publishedAt": "2026-07-21T12:00:00.000Z"
+    },
+    {
+      "id": "google-blog:gemini-3.5",
+      "organizationId": "google-deepmind",
+      "channelId": "google-ai-blog",
+      "sourceType": "blog",
+      "authority": 82,
+      "role": "supporting",
+      "title": "Gemini 3.5 Flash is now available in the Gemini API",
+      "summary": "Developers can use Gemini 3.5 Flash today with tool use and long context.",
+      "url": "https://blog.google/technology/ai/gemini-3-5-flash-api/",
+      "canonicalUrl": "https://blog.google/technology/ai/gemini-3-5-flash-api",
+      "publishedAt": "2026-07-21T15:00:00.000Z"
+    }
+  ],
+  "googleDistinctVersions": [
+    {
+      "id": "google-news:gemini-3.5",
+      "organizationId": "google-deepmind",
+      "channelId": "google-deepmind-news",
+      "sourceType": "newsroom",
+      "authority": 95,
+      "role": "primary",
+      "title": "Introducing Gemini 3.5 Flash",
+      "summary": "A new Gemini model available today.",
+      "url": "https://deepmind.google/blog/gemini-3-5-flash/",
+      "canonicalUrl": "https://deepmind.google/blog/gemini-3-5-flash",
+      "publishedAt": "2026-07-21T12:00:00.000Z"
+    },
+    {
+      "id": "google-news:gemini-3.6",
+      "organizationId": "google-deepmind",
+      "channelId": "google-deepmind-news",
+      "sourceType": "newsroom",
+      "authority": 95,
+      "role": "primary",
+      "title": "Introducing Gemini 3.6 Flash",
+      "summary": "A new Gemini model available today.",
+      "url": "https://deepmind.google/blog/gemini-3-6-flash/",
+      "canonicalUrl": "https://deepmind.google/blog/gemini-3-6-flash",
+      "publishedAt": "2026-07-22T12:00:00.000Z"
+    }
+  ],
+  "metaHtml": "<html><body><a href=\"https://ai.meta.com/blog/introducing-muse-spark-meta-model-api/\"><div>FEATURED</div></a><a href=\"https://ai.meta.com/blog/introducing-muse-spark-meta-model-api/\">Introducing Muse Spark 1.1</a><div>July 9, 2026</div><a aria-label=\"Read Reimagining Independence: How Meta’s AI Models Are Helping the University of Pittsburgh Transform Assistive Robotics\" href=\"https://ai.meta.com/blog/assistive-robotics-university-of-pittsburgh-sam-dino/\"><img alt=\"\" /></a><a href=\"https://ai.meta.com/blog/llama-4-multimodal-intelligence/\">The Llama 4 herd: natively multimodal models now available</a><div>April 5, 2026</div><div class=\"listview-card\"><h4>Research</h4><h4>Introducing TRIBE v2: A Predictive Foundation Model Trained to Understand How the Human Brain Processes Complex Stimuli</h4><p>March 26, 2026</p><a href=\"https://ai.meta.com/blog/tribe-v2-brain-predictive-foundation-model/\"><span>Learn More</span></a></div><div class=\"listview-card\"><h4>Scaling How We Build and Test Our Most Advanced AI</h4><p>April 08, 2026</p><a href=\"https://ai.meta.com/blog/scaling-how-we-build-test-advanced-ai/\"><span>Learn More</span></a></div><a href=\"https://ai.meta.com/blog/?page=2\">Next</a><a href=\"https://ai.meta.com/careers/\">Meta is hiring research engineers</a></body></html>",
+  "metaLaunch": {
+    "id": "meta-ai-blog:llama-4",
+    "organizationId": "meta-ai",
+    "channelId": "meta-ai-blog",
+    "sourceType": "newsroom",
+    "authority": 94,
+    "role": "primary",
+    "title": "Introducing Llama 4 Scout",
+      "summary": "Llama 4 Scout is a new open-weights model available to download today on llama.com.",
+    "url": "https://ai.meta.com/blog/llama-4-multimodal-intelligence/",
+    "canonicalUrl": "https://ai.meta.com/blog/llama-4-multimodal-intelligence",
+    "publishedAt": "2026-04-05T12:00:00.000Z"
+  },
+  "metaExcluded": {
+    "title": "Reimagining Independence: How Meta’s AI Models Are Helping the University of Pittsburgh",
+    "summary": "A customer story about assistive robotics research."
+  },
+  "xaiHtml": "<html><body><a href=\"/news/grok-4-6\">Introducing Grok 4.6</a><p>Aug 12, 2026</p><a href=\"/news/grok-4-5\">Introducing Grok 4.5</a><p>Jul 16, 2026</p><a href=\"/news/xai-is-hiring\">xAI is hiring research engineers</a></body></html>",
+  "xaiLaunch": {
+    "id": "xai-news:grok-4-6",
+    "organizationId": "xai",
+    "channelId": "xai-news",
+    "sourceType": "newsroom",
+    "authority": 94,
+    "role": "primary",
+    "title": "Introducing Grok 4.6",
+    "summary": "Grok 4.6 is available today in the xAI API, Cursor, and Grok Build.",
+    "url": "https://x.ai/news/grok-4-6",
+    "canonicalUrl": "https://x.ai/news/grok-4-6",
+    "publishedAt": "2026-08-12T12:00:00.000Z"
+  },
+  "xaiDistinctVersions": [
+    {
+      "id": "xai-news:grok-4-5",
+      "organizationId": "xai",
+      "channelId": "xai-news",
+      "sourceType": "newsroom",
+      "authority": 94,
+      "role": "primary",
+      "title": "Introducing Grok 4.5",
+      "summary": "Grok 4.5 is available today in the xAI API.",
+      "url": "https://x.ai/news/grok-4-5",
+      "canonicalUrl": "https://x.ai/news/grok-4-5",
+      "publishedAt": "2026-07-16T12:00:00.000Z"
+    },
+    {
+      "id": "xai-news:grok-4-6",
+      "organizationId": "xai",
+      "channelId": "xai-news",
+      "sourceType": "newsroom",
+      "authority": 94,
+      "role": "primary",
+      "title": "Introducing Grok 4.6",
+      "summary": "Grok 4.6 is available today in the xAI API.",
+      "url": "https://x.ai/news/grok-4-6",
+      "canonicalUrl": "https://x.ai/news/grok-4-6",
+      "publishedAt": "2026-08-12T12:00:00.000Z"
+    }
+  ],
+  "deepseekHtml": "<article><h1>Change Log</h1><h2 id=\"date-2026-08-13\">Date: 2026-08-13</h2><h3 id=\"deepseek-v4-pro-update\">DeepSeek-V4-Pro Update&#8203;</h3><p>The GA release of DeepSeek-V4-Pro has been rolled out on the APP, Web, and API.</p><h2 id=\"date-2026-07-31\">Date: 2026-07-31</h2><h3 id=\"deepseek-v4-flash-update\">DeepSeek-V4-Flash Update</h3><p>The official release of the DeepSeek-V4-Flash API is now in public beta.</p><h2 id=\"date-2024-12-26\">Date: 2024-12-26</h2><h3 id=\"deepseek-chat-1\">deepseek-chat</h3><p>The deepseek-chat API alias was released.</p></article>",
+  "deepseekLaunch": {
+    "id": "deepseek-updates:v4-pro",
+    "organizationId": "deepseek",
+    "channelId": "deepseek-updates",
+    "sourceType": "changelog",
+    "authority": 94,
+    "role": "primary",
+    "title": "DeepSeek-V4-Pro Update",
+    "summary": "The GA release of DeepSeek-V4-Pro has been rolled out on the APP, Web, and API.",
+    "url": "https://api-docs.deepseek.com/updates#deepseek-v4-pro-update",
+    "canonicalUrl": "https://api-docs.deepseek.com/updates",
+    "publishedAt": "2026-08-13T12:00:00.000Z"
+  },
+  "qwenRss": "<?xml version=\"1.0\" encoding=\"utf-8\"?><rss version=\"2.0\"><channel><title>Qwen Blog</title><item><title>Qwen3Guard: Real-time Safety for Your Token Stream</title><link>https://qwenlm.github.io/blog/qwen3guard/</link><guid>https://qwenlm.github.io/blog/qwen3guard/</guid><pubDate>Mon, 22 Sep 2025 20:00:00 GMT</pubDate><description>Qwen3Guard is now available as an open-source safety model.</description></item><item><title>Qwen is hiring research engineers</title><link>https://qwenlm.github.io/blog/hiring/</link><guid>https://qwenlm.github.io/blog/hiring/</guid><pubDate>Mon, 01 Sep 2025 12:00:00 GMT</pubDate><description>Join our team to build the next model.</description></item></channel></rss>",
+  "qwenLaunch": {
+    "id": "qwen-blog:qwen3guard",
+    "organizationId": "qwen",
+    "channelId": "qwen-blog",
+    "sourceType": "newsroom",
+    "authority": 94,
+    "role": "primary",
+    "title": "Introducing Qwen3Guard",
+    "summary": "Qwen3Guard is now available as an open-source safety model with downloadable weights.",
+    "url": "https://qwenlm.github.io/blog/qwen3guard/",
+    "canonicalUrl": "https://qwenlm.github.io/blog/qwen3guard",
+    "publishedAt": "2025-09-22T20:00:00.000Z"
+  },
+  "mistralRss": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><rss version=\"2.0\"><channel><title>Mistral AI Blog</title><item><title>Introducing Shieldstral.</title><link>https://mistral.ai/news/shieldstral/</link><guid>https://mistral.ai/news/shieldstral/</guid><pubDate>Tue, 04 Aug 2026 12:00:00 GMT</pubDate><description>Shieldstral is now available as a safety model on the Mistral API.</description></item><item><title>Mistral AI partners with NVIDIA to accelerate open frontier models</title><link>https://mistral.ai/news/mistral-nvidia/</link><guid>https://mistral.ai/news/mistral-nvidia/</guid><pubDate>Mon, 20 Apr 2026 12:00:00 GMT</pubDate><description>A partnership announcement with NVIDIA.</description></item></channel></rss>",
+  "mistralLaunch": {
+    "id": "mistral-news:shieldstral",
+    "organizationId": "mistral",
+    "channelId": "mistral-news",
+    "sourceType": "newsroom",
+    "authority": 94,
+    "role": "primary",
+    "title": "Introducing Shieldstral",
+      "summary": "Shieldstral is now available as a safety model on the API.",
+    "url": "https://mistral.ai/news/shieldstral/",
+    "canonicalUrl": "https://mistral.ai/news/shieldstral",
+    "publishedAt": "2026-08-04T12:00:00.000Z"
+  }
+}

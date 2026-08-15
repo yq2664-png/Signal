@@ -46,8 +46,7 @@ export function AuthModal() {
               Sign in with Google
             </h2>
             <p className="mt-1 text-[13px] leading-5 text-[var(--text-secondary)]">
-              Sync likes, saves, and personalized ranking to your Google
-              account. No email codes.
+              Sync likes and saves to your Google account.
             </p>
           </div>
           <button

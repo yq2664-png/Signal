@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img">
+  <title>Thinking Machines</title>
+  <path fill="#F7F8F8" d="M4 5h16v3h-6.4v11h-3.2V8H4V5Z"/>
+</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Thinking Machines">
+  <rect width="64" height="64" rx="10" fill="#0F1011"/>
+  <path fill="#F7F8F8" d="M10 15h44v9H37v25H27V24H10z"/>
+  <path fill="#8A8F98" d="M42 30h12v19H44V38h-2z"/>
+</svg>

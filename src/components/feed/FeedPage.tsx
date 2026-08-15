@@ -1,33 +1,24 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Search } from "lucide-react";
 import { FeedFilters, defaultFilters, type FeedFiltersState } from "@/components/feed/FeedFilters";
 import { ImpactBriefDrawer } from "@/components/feed/ImpactBriefDrawer";
-import {
-  SourceBoard,
-  SourceGroupChips,
-} from "@/components/feed/SourceBoard";
+import { RankedFeedList } from "@/components/feed/RankedFeedList";
+import { SourceGroupChips } from "@/components/feed/SourceBoard";
 import { AppShell } from "@/components/layout/AppShell";
-import { useAuth } from "@/context/AuthContext";
+import { Button } from "@/components/ui/Button";
 import { useFeed } from "@/context/FeedContext";
-import { useLikes } from "@/context/LikesContext";
-import type { FeedItem } from "@/lib/types";
+import { insightForItem } from "@/lib/surface/insight-link";
 import { groupIdForSource, type SourceGroupId } from "@/lib/source-groups";
-import { sortFeedBoard } from "@/lib/utils";
 
 export function FeedPage() {
-  const { items, meta, loading, error, refresh } = useFeed();
-  const { prefs, user } = useAuth();
-  const { getLikes, ready: likesReady } = useLikes();
-  const getLikesRef = useRef(getLikes);
-  getLikesRef.current = getLikes;
-  const prefsRef = useRef(prefs);
-  prefsRef.current = prefs;
+  const { items, insights, loading, error, refresh } = useFeed();
   const [filters, setFilters] = useState<FeedFiltersState>(defaultFilters);
   const [groupFilter, setGroupFilter] = useState<SourceGroupId | "all">("all");
+  const [toolsOpen, setToolsOpen] = useState(false);
   const [selectedId, setSelectedId] = useState("");
-  const [briefOpen, setBriefOpen] = useState(true);
-  const [filtered, setFiltered] = useState<FeedItem[]>([]);
+  const [briefOpen, setBriefOpen] = useState(false);
 
   useEffect(() => {
     if (!selectedId && items[0]) setSelectedId(items[0].id);
@@ -37,36 +28,19 @@ export function FeedPage() {
     const q = filters.query.trim().toLowerCase();
     if (!q) return items;
     return items.filter((item) => {
-      const hay = [
-        item.title,
-        item.summary,
-        item.source,
-        item.category,
-        ...item.tags,
-      ]
+      const hay = [item.title, item.summary, item.source]
         .join(" ")
         .toLowerCase();
       return hay.includes(q);
     });
   }, [filters.query, items]);
 
-  const candidates = useMemo(() => {
+  const filtered = useMemo(() => {
     if (groupFilter === "all") return searched;
     return searched.filter(
       (item) => groupIdForSource(item.source) === groupFilter
     );
   }, [groupFilter, searched]);
-
-  // Re-sort when candidates / auth prefs / likes hydrate — not on each like click.
-  useEffect(() => {
-    if (!likesReady && candidates.length === 0) {
-      setFiltered([]);
-      return;
-    }
-    setFiltered(
-      sortFeedBoard(candidates, getLikesRef.current, prefsRef.current)
-    );
-  }, [candidates, likesReady, user?.id, prefs?.sampleSize]);
 
   const selected =
     filtered.find((item) => item.id === selectedId) ??
@@ -87,37 +61,22 @@ export function FeedPage() {
     return base;
   }, [searched]);
 
-  const highImpact = items.filter((i) => i.tier === "High Impact").length;
-  const cacheLabel = (() => {
-    if (!meta?.fromCache) return meta ? "fresh crawl" : null;
-    const age = meta.cacheAgeSec ?? 0;
-    if (age < 60) return "cached · just now";
-    if (age < 3600) return `cached · ${Math.round(age / 60)}m ago`;
-    return `cached · ${Math.round(age / 3600)}h ago`;
-  })();
-  const personalLabel =
-    user && prefs && prefs.sampleSize > 0
-      ? ` · personalized (${prefs.sampleSize})`
-      : "";
-  const liveLabel = meta
-    ? `${meta.liveCount} live · ${meta.enrichedCount} AI briefs${
-        cacheLabel ? ` · ${cacheLabel}` : ""
-      }${personalLabel}`
-    : loading
-      ? "loading live sources…"
-      : error
-        ? "live feed unavailable"
-        : "live sources";
-
-  const handleSelect = (id: string) => {
-    setSelectedId(id);
-    setBriefOpen(true);
-  };
-
   return (
     <AppShell
-      title="AI Intelligence Feed"
-      subtitle={`${items.length} updates · ${highImpact} high impact · ${liveLabel}`}
+      title="Feed"
+      subtitle="What matters in AI today"
+      actions={
+        <Button
+          variant="ghost"
+          active={toolsOpen}
+          aria-expanded={toolsOpen}
+          aria-label={toolsOpen ? "Hide search and filters" : "Show search and filters"}
+          onClick={() => setToolsOpen((open) => !open)}
+        >
+          <Search className="h-3.5 w-3.5" strokeWidth={1.75} />
+          {toolsOpen ? "Close" : "Search"}
+        </Button>
+      }
     >
       {error ? (
         <div className="border-b border-[var(--border)] bg-[rgba(255,80,80,0.08)] px-4 py-2 text-[12px] text-[var(--text-secondary)]">
@@ -126,28 +85,34 @@ export function FeedPage() {
       ) : null}
 
       <div className="relative flex h-full min-h-0 flex-col">
-        <FeedFilters
-          value={filters}
-          onChange={setFilters}
-          resultCount={filtered.length}
-          extra={
-            <SourceGroupChips
-              active={groupFilter}
-              onChange={setGroupFilter}
-              counts={groupCounts}
-            />
-          }
-        />
+        {toolsOpen ? (
+          <FeedFilters
+            value={filters}
+            onChange={setFilters}
+            resultCount={filtered.length}
+            extra={
+              <SourceGroupChips
+                active={groupFilter}
+                onChange={setGroupFilter}
+                counts={groupCounts}
+              />
+            }
+          />
+        ) : null}
         <div className="min-h-0 flex-1">
-          <SourceBoard
+          <RankedFeedList
             items={filtered}
+            insights={insights}
             selectedId={selected?.id}
-            onSelect={handleSelect}
+            onSelect={(id) => {
+              setSelectedId(id);
+              setBriefOpen(true);
+            }}
             onRefresh={refresh}
             refreshing={loading}
             emptyMessage={
               loading
-                ? "Loading live intelligence…"
+                ? "Loading…"
                 : "No updates match these filters."
             }
           />
@@ -156,6 +121,7 @@ export function FeedPage() {
         {selected && briefOpen ? (
           <ImpactBriefDrawer
             item={selected}
+            insight={insightForItem(selected, insights)}
             onClose={() => setBriefOpen(false)}
           />
         ) : null}

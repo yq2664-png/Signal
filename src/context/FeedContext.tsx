@@ -11,10 +11,11 @@ import {
   type ReactNode,
 } from "react";
 import type { FeedPayload } from "@/lib/live/aggregate";
-import type { FeedItem } from "@/lib/types";
+import type { FeedItem, Insight } from "@/lib/types";
 
 type FeedContextValue = {
   items: FeedItem[];
+  insights: Insight[];
   meta: FeedPayload["meta"] | null;
   loading: boolean;
   error: string | null;
@@ -28,6 +29,7 @@ const FeedContext = createContext<FeedContextValue | null>(null);
 
 export function FeedProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<FeedItem[]>([]);
+  const [insights, setInsights] = useState<Insight[]>([]);
   const [meta, setMeta] = useState<FeedPayload["meta"] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -52,6 +54,7 @@ export function FeedProvider({ children }: { children: ReactNode }) {
       .then((payload) => {
         if (cancelled) return;
         setItems(payload.items);
+        setInsights(payload.insights ?? []);
         setMeta(payload.meta);
       })
       .catch((err: unknown) => {
@@ -80,13 +83,14 @@ export function FeedProvider({ children }: { children: ReactNode }) {
   const value = useMemo(
     () => ({
       items,
+      insights,
       meta,
       loading,
       error,
       refresh,
       forceRefresh,
     }),
-    [items, meta, loading, error, refresh, forceRefresh]
+    [items, insights, meta, loading, error, refresh, forceRefresh]
   );
 
   return <FeedContext.Provider value={value}>{children}</FeedContext.Provider>;

@@ -1,0 +1,119 @@
+{
+  "openAiCrossChannel": [
+    {
+      "id": "news:gpt-5.1",
+      "organizationId": "openai",
+      "channelId": "openai-news",
+      "sourceType": "newsroom",
+      "authority": 90,
+      "role": "primary",
+      "title": "Introducing GPT-5.1",
+      "summary": "GPT-5.1 is a new reasoning and coding model available today in ChatGPT.",
+      "url": "https://openai.com/index/introducing-gpt-5-1/?utm_source=x",
+      "canonicalUrl": "https://openai.com/index/introducing-gpt-5-1",
+      "publishedAt": "2026-08-01T12:00:00.000Z"
+    },
+    {
+      "id": "docs:gpt-5.1",
+      "organizationId": "openai",
+      "channelId": "openai-developer",
+      "sourceType": "developer-docs",
+      "authority": 78,
+      "role": "supporting",
+      "title": "GPT-5.1 is now available in the API",
+      "summary": "Developers can use the GPT-5.1 model today with tool use and long context.",
+      "url": "https://platform.openai.com/docs/models/gpt-5.1",
+      "canonicalUrl": "https://platform.openai.com/docs/models/gpt-5.1",
+      "publishedAt": "2026-08-01T13:00:00.000Z"
+    },
+    {
+      "id": "x:gpt-5.1",
+      "organizationId": "openai",
+      "channelId": "openai-x",
+      "sourceType": "official-x",
+      "authority": 65,
+      "role": "signal",
+      "title": "GPT-5.1 is available today",
+      "summary": "We are releasing GPT-5.1 for reasoning and coding across ChatGPT and the API.",
+      "url": "https://x.com/OpenAI/status/1001",
+      "canonicalUrl": "https://x.com/OpenAI/status/1001",
+      "publishedAt": "2026-08-01T14:00:00.000Z"
+    }
+  ],
+  "distinctVersions": [
+    {
+      "id": "news:gpt-5.1",
+      "organizationId": "openai",
+      "channelId": "openai-news",
+      "sourceType": "newsroom",
+      "authority": 90,
+      "role": "primary",
+      "title": "Introducing GPT-5.1",
+      "summary": "A new reasoning model available today.",
+      "url": "https://openai.com/index/gpt-5-1",
+      "canonicalUrl": "https://openai.com/index/gpt-5-1",
+      "publishedAt": "2026-08-01T12:00:00.000Z"
+    },
+    {
+      "id": "news:gpt-5.2",
+      "organizationId": "openai",
+      "channelId": "openai-news",
+      "sourceType": "newsroom",
+      "authority": 90,
+      "role": "primary",
+      "title": "Introducing GPT-5.2",
+      "summary": "A new reasoning model available today.",
+      "url": "https://openai.com/index/gpt-5-2",
+      "canonicalUrl": "https://openai.com/index/gpt-5-2",
+      "publishedAt": "2026-08-02T12:00:00.000Z"
+    }
+  ],
+  "anthropicCrossChannel": [
+    {
+      "id": "anthropic-news:sonnet-5",
+      "organizationId": "anthropic",
+      "channelId": "anthropic-news",
+      "sourceType": "newsroom",
+      "authority": 90,
+      "role": "primary",
+      "title": "Introducing Claude Sonnet 5",
+      "summary": "Claude Sonnet 5 is launched and available today in the Claude API.",
+      "url": "https://anthropic.com/news/claude-sonnet-5",
+      "canonicalUrl": "https://anthropic.com/news/claude-sonnet-5",
+      "publishedAt": "2026-06-30T09:00:00.000Z"
+    },
+    {
+      "id": "anthropic-notes:sonnet-5",
+      "organizationId": "anthropic",
+      "channelId": "anthropic-release-notes",
+      "sourceType": "changelog",
+      "authority": 76,
+      "role": "supporting",
+      "title": "We've launched Claude Sonnet 5",
+      "summary": "Claude Sonnet 5 is available on the Claude API with a 1M token context window.",
+      "url": "https://platform.claude.com/docs/en/about-claude/models/whats-new-sonnet-5",
+      "canonicalUrl": "https://platform.claude.com/docs/en/about-claude/models/whats-new-sonnet-5",
+      "publishedAt": "2026-06-30T12:00:00.000Z"
+    }
+  ],
+  "openAiMarkdown": "# Changelog\n\n## August, 2026\n\n### Aug 7\n\nFeature · Model: daybreak-blue-latest\n\nDaybreak is now available to approved defenders. Read the [Daybreak model guide](https://developers.openai.com/api/docs/models/daybreak-blue-latest).\n\n### Aug 6\n\nUpdate · Model: chat-latest\n\nUpdated [chat-latest](https://developers.openai.com/api/docs/models/chat-latest), now available for Plus users.\n",
+  "anthropicMarkdown": "### July 24, 2026\n\n* We've launched **Claude Opus 5** (`claude-opus-5`), available on the [Claude API](https://platform.claude.com/docs/en/about-claude/models/whats-new-opus-5).\n* The `fallbacks` parameter now supports a [default mode](https://platform.claude.com/docs/en/build-with-claude/refusals-and-fallback).\n\n### June 30, 2026\n\n* We've launched **Claude Sonnet 5**, available on the [Claude API](https://platform.claude.com/docs/en/about-claude/models/whats-new-sonnet-5).\n",
+  "excluded": [
+    {
+      "title": "OpenAI is hiring research engineers",
+      "summary": "Join our team to build the next model."
+    },
+    {
+      "title": "Anthropic developer conference",
+      "summary": "Register for our upcoming event."
+    },
+    {
+      "title": "Claude documentation patch",
+      "summary": "Minor fixes to API docs."
+    },
+    {
+      "title": "Interaction Models",
+      "summary": "A research preview exploring how people and AI systems interact."
+    }
+  ]
+}

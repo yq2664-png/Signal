@@ -30,12 +30,14 @@ export async function toggleLibraryItem(
   userId: string,
   item: FeedItem
 ): Promise<{ active: boolean; items: FeedItem[] }> {
-  const { data: existing } = await supabase
+  const { data: existing, error: lookupError } = await supabase
     .from(table(kind))
     .select("item_id")
     .eq("user_id", userId)
     .eq("item_id", item.id)
     .maybeSingle();
+
+  if (lookupError) throw lookupError;
 
   if (existing) {
     const { error } = await supabase
@@ -48,7 +50,7 @@ export async function toggleLibraryItem(
     const { error } = await supabase.from(table(kind)).upsert({
       user_id: userId,
       item_id: item.id,
-      item_json: item,
+      item_json: JSON.parse(JSON.stringify(item)) as FeedItem,
     });
     if (error) throw error;
   }

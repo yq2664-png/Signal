@@ -254,7 +254,11 @@ export async function enrichFeedItems(items: FeedItem[]): Promise<EnrichResult> 
 
   const needsWork = withCache
     .map((item, index) => ({ item, index, key: cacheKey(items[index]) }))
-    .filter(({ item }) => !item.tags?.includes("ai-headline"))
+    .filter(
+      ({ item }) =>
+        !item.tags?.includes("ai-headline") &&
+        !item.tags?.includes("research-paper")
+    )
     .sort((a, b) => {
       const sa =
         a.item.scores.impact * 0.45 +

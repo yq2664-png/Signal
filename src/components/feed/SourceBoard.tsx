@@ -21,13 +21,17 @@ export function SourceGroupChips({
   onChange: (id: SourceGroupId | "all") => void;
   counts: Record<SourceGroupId | "all", number>;
 }) {
-  const chips: { id: SourceGroupId | "all"; label: string }[] = [
-    { id: "all", label: "All Sources" },
-    ...sourceGroups.map((g) => ({
-      id: g.id as SourceGroupId | "all",
-      label: g.label,
-    })),
-  ];
+  const chips: { id: SourceGroupId; label: string }[] = sourceGroups.map(
+    (group) => ({
+      id: group.id,
+      label:
+        group.id === "labs"
+          ? "Launches"
+          : group.id === "research"
+            ? "Research"
+            : "Other",
+    })
+  );
 
   return (
     <div className="flex flex-wrap gap-1">
@@ -35,7 +39,7 @@ export function SourceGroupChips({
         <button
           key={chip.id}
           type="button"
-          onClick={() => onChange(chip.id)}
+          onClick={() => onChange(active === chip.id ? "all" : chip.id)}
           className={clsx(
             "rounded-[4px] px-2 py-1 text-[11px] transition-colors duration-100",
             active === chip.id

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AuthModal } from "@/components/auth/AuthModal";
+import { ToastProvider } from "@/components/ui/Toast";
 import { AuthProvider } from "@/context/AuthContext";
 import { BookmarksProvider } from "@/context/BookmarksContext";
 import { FeedProvider } from "@/context/FeedContext";
@@ -34,16 +35,18 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-[var(--bg)] text-[var(--text-primary)]">
-        <AuthProvider>
-          <FeedProvider>
-            <LikesProvider>
-              <BookmarksProvider>
-                {children}
-                <AuthModal />
-              </BookmarksProvider>
-            </LikesProvider>
-          </FeedProvider>
-        </AuthProvider>
+        <ToastProvider>
+          <AuthProvider>
+            <FeedProvider>
+              <LikesProvider>
+                <BookmarksProvider>
+                  {children}
+                  <AuthModal />
+                </BookmarksProvider>
+              </LikesProvider>
+            </FeedProvider>
+          </AuthProvider>
+        </ToastProvider>
       </body>
     </html>
   );

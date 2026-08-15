@@ -40,7 +40,7 @@ export function FeedFilters({
           <input
             value={value.query}
             onChange={(e) => onChange({ ...value, query: e.target.value })}
-            placeholder="Search titles, sources, tags…"
+            placeholder="Search…"
             className="h-8 w-full rounded-[6px] bg-[var(--bg-overlay)] pr-3 pl-8 text-[13px] text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] focus:shadow-[var(--inset-border)]"
           />
         </div>

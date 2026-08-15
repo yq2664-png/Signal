@@ -15,9 +15,12 @@ import { useAuth } from "@/context/AuthContext";
 import { useBookmarks } from "@/context/BookmarksContext";
 import { useLikes } from "@/context/LikesContext";
 
-const nav = [
+const primaryNav = [
   { href: "/feed", label: "Feed", icon: LayoutList },
   { href: "/insights", label: "Insights", icon: Sparkles },
+];
+
+const libraryNav = [
   { href: "/liked", label: "Liked", icon: Heart, badge: "likes" as const },
   { href: "/saved", label: "Saved", icon: Bookmark, badge: "saves" as const },
 ];
@@ -26,7 +29,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const { count: likeCount } = useLikes();
   const { count: saveCount } = useBookmarks();
-  const { user, openAuth, logout, prefs } = useAuth();
+  const { user, openAuth, logout } = useAuth();
 
   return (
     <aside
@@ -42,18 +45,14 @@ export function Sidebar() {
             SIGNAL
           </div>
           <div className="mono text-[10px] leading-3 text-[var(--text-muted)]">
-            AI Intelligence
+            What matters in AI
           </div>
         </div>
       </div>
 
       <nav className="flex flex-1 flex-col gap-0.5 px-2 pt-3">
-        <div className="label mb-2 px-2">Workspace</div>
-        {nav.map(({ href, label, icon: Icon, badge }) => {
-          const active =
-            pathname === href || pathname.startsWith(`${href}/`);
-          const count =
-            badge === "likes" ? likeCount : badge === "saves" ? saveCount : 0;
+        {primaryNav.map(({ href, label, icon: Icon }) => {
+          const active = pathname === href || pathname.startsWith(`${href}/`);
           return (
             <Link
               key={href}
@@ -70,6 +69,32 @@ export function Sidebar() {
             >
               <Icon className="h-4 w-4 shrink-0 opacity-80" strokeWidth={1.75} />
               <span className="min-w-0 flex-1 font-medium">{label}</span>
+            </Link>
+          );
+        })}
+
+        <div className="label mb-1 mt-5 px-2">Library</div>
+        {libraryNav.map(({ href, label, icon: Icon, badge }) => {
+          const active =
+            pathname === href || pathname.startsWith(`${href}/`);
+          const count =
+            badge === "likes" ? likeCount : badge === "saves" ? saveCount : 0;
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={clsx(
+                "flex items-center gap-2.5 rounded-[6px] px-2.5 py-1.5 text-[12px] transition-colors duration-100",
+                active
+                  ? "bg-[var(--bg-active)] text-[var(--text-primary)]"
+                  : "text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]"
+              )}
+              style={{
+                transitionTimingFunction: "cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+              }}
+            >
+              <Icon className="h-3.5 w-3.5 shrink-0 opacity-70" strokeWidth={1.75} />
+              <span className="min-w-0 flex-1">{label}</span>
               {count > 0 ? (
                 <span className="mono text-[10px] text-[var(--text-muted)]">
                   {count}
@@ -82,39 +107,27 @@ export function Sidebar() {
 
       <div className="border-t border-[var(--border)] p-3">
         {user ? (
-          <div className="rounded-[6px] bg-[var(--bg-overlay)] p-3">
-            <div className="label mb-1">Signed in</div>
-            <p className="truncate text-[12px] text-[var(--text-body)]">
+          <div className="px-1 py-1">
+            <p className="truncate text-[12px] text-[var(--text-muted)]">
               {user.email}
-            </p>
-            <p className="mt-1 text-[11px] text-[var(--text-muted)]">
-              {prefs && prefs.sampleSize > 0
-                ? `Personalized from ${prefs.sampleSize} signals`
-                : "Like / save to personalize ranking"}
             </p>
             <button
               type="button"
               onClick={() => void logout()}
-              className="mt-2 inline-flex items-center gap-1.5 text-[11px] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+              className="mt-1 inline-flex items-center gap-1.5 text-[11px] text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
             >
               <LogOut className="h-3 w-3" />
               Sign out
             </button>
           </div>
         ) : (
-          <div className="rounded-[6px] bg-[var(--bg-overlay)] p-3">
-            <div className="label mb-1">Account</div>
-            <p className="body-sm mb-2">
-              Google sign-in syncs likes, saves, and personalized ranking.
-            </p>
-            <button
-              type="button"
-              onClick={() => openAuth()}
-              className="w-full rounded-[6px] bg-[var(--cta)] px-2.5 py-1.5 text-[12px] font-semibold text-[var(--cta-text)]"
-            >
-              Sign in with Google
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => openAuth()}
+            className="w-full rounded-[6px] px-2.5 py-1.5 text-left text-[12px] text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]"
+          >
+            Sign in to sync
+          </button>
         )}
       </div>
     </aside>

@@ -1,0 +1,389 @@
+{
+  "editorialTop10Principles": [
+    "no-labs-first-dominance",
+    "no-global-score-dominance",
+    "supply-capability-adoption-diversity",
+    "no-weak-quota-filling",
+    "no-same-org-adjacency",
+    "max-2-consecutive-same-role-unless-breaking",
+    "high-capability-adoption-can-outrank-lower-launches"
+  ],
+  "items": [
+    {
+      "id": "ol-gpt-51",
+      "title": "Introducing GPT-5.1",
+      "source": "OpenAI",
+      "publishedAt": "2026-08-01T12:00:00.000Z",
+      "category": "Model Releases",
+      "pool": "in",
+      "kind": "major-launch",
+      "officialLaunch": { "eventId": "ol-gpt-51", "eventType": "model-release", "model": "GPT-5.1" }
+    },
+    {
+      "id": "ol-gpt-52",
+      "title": "Introducing GPT-5.2",
+      "source": "OpenAI",
+      "publishedAt": "2026-08-02T12:00:00.000Z",
+      "category": "Model Releases",
+      "pool": "in",
+      "kind": "same-org-follow-on",
+      "officialLaunch": { "eventId": "ol-gpt-52", "eventType": "model-release", "model": "GPT-5.2" }
+    },
+    {
+      "id": "ol-sonnet-5",
+      "title": "Introducing Claude Sonnet 5",
+      "source": "Anthropic",
+      "publishedAt": "2026-08-03T12:00:00.000Z",
+      "category": "Model Releases",
+      "pool": "in",
+      "kind": "major-launch",
+      "officialLaunch": { "eventId": "ol-sonnet-5", "eventType": "model-release", "model": "Claude Sonnet 5" }
+    },
+    {
+      "id": "ol-gemini-35",
+      "title": "Introducing Gemini 3.5 Flash",
+      "source": "Google DeepMind",
+      "publishedAt": "2026-07-21T12:00:00.000Z",
+      "category": "Model Releases",
+      "pool": "in",
+      "kind": "major-launch",
+      "officialLaunch": { "eventId": "ol-gemini-35", "eventType": "model-release", "model": "Gemini 3.5 Flash" }
+    },
+    {
+      "id": "ol-grok-46",
+      "title": "Introducing Grok 4.6",
+      "source": "xAI",
+      "publishedAt": "2026-07-18T12:00:00.000Z",
+      "category": "Model Releases",
+      "pool": "in",
+      "kind": "major-launch",
+      "officialLaunch": { "eventId": "ol-grok-46", "eventType": "model-release", "model": "Grok 4.6" }
+    },
+    {
+      "id": "ol-llama-4",
+      "title": "Introducing Llama 4 Scout",
+      "source": "Meta AI",
+      "publishedAt": "2026-07-10T12:00:00.000Z",
+      "category": "Model Releases",
+      "pool": "in",
+      "kind": "major-launch",
+      "officialLaunch": { "eventId": "ol-llama-4", "eventType": "model-release", "model": "Llama 4 Scout" }
+    },
+    {
+      "id": "ol-deepseek-update",
+      "title": "DeepSeek-V4-Pro Update",
+      "source": "DeepSeek",
+      "publishedAt": "2026-08-04T12:00:00.000Z",
+      "category": "Model Releases",
+      "pool": "in",
+      "kind": "minor-launch",
+      "officialLaunch": { "eventId": "ol-deepseek-update", "eventType": "major-update", "model": "DeepSeek-V4-Pro" }
+    },
+    {
+      "id": "ol-qwen-guard",
+      "title": "Introducing Qwen3Guard",
+      "source": "Qwen",
+      "publishedAt": "2026-07-28T12:00:00.000Z",
+      "category": "AI Products",
+      "pool": "in",
+      "kind": "minor-launch",
+      "officialLaunch": { "eventId": "ol-qwen-guard", "eventType": "product-launch", "product": "Qwen3Guard" }
+    },
+    {
+      "id": "ol-shieldstral",
+      "title": "Introducing Shieldstral",
+      "source": "Mistral AI",
+      "publishedAt": "2026-07-12T12:00:00.000Z",
+      "category": "AI Products",
+      "pool": "in",
+      "kind": "minor-launch",
+      "officialLaunch": { "eventId": "ol-shieldstral", "eventType": "product-launch", "product": "Shieldstral" }
+    },
+    {
+      "id": "ol-minimax-m3",
+      "title": "Introducing MiniMax M3",
+      "source": "MiniMax",
+      "publishedAt": "2026-06-01T12:00:00.000Z",
+      "category": "Model Releases",
+      "pool": "in",
+      "kind": "major-launch",
+      "officialLaunch": { "eventId": "ol-minimax-m3", "eventType": "model-release", "model": "MiniMax M3" }
+    },
+    {
+      "id": "ol-minimax-h3",
+      "title": "MiniMax H3 Is Now Open Source",
+      "source": "MiniMax",
+      "publishedAt": "2026-08-01T12:00:00.000Z",
+      "category": "Model Releases",
+      "pool": "hold",
+      "kind": "emerging-hold",
+      "tags": ["watch"],
+      "officialLaunch": { "eventId": "ol-minimax-h3", "eventType": "open-source-release", "model": "MiniMax H3" }
+    },
+    {
+      "id": "ol-hiring",
+      "title": "Google DeepMind is hiring research scientists",
+      "source": "Google DeepMind",
+      "publishedAt": "2026-07-20T12:00:00.000Z",
+      "category": "AI Products",
+      "pool": "out",
+      "kind": "excluded",
+      "tags": ["fail", "excluded"]
+    },
+    {
+      "id": "rp-mem0",
+      "title": "Mem0: Building Production-Ready AI Agents with Scalable Long-Term Memory",
+      "source": "arXiv",
+      "publishedAt": "2025-04-28T01:46:35Z",
+      "category": "Research Papers",
+      "pool": "in",
+      "kind": "strong-paper",
+      "researchPaper": { "arxivId": "2504.19413", "relevanceCue": "Agent memory" }
+    },
+    {
+      "id": "rp-joyai",
+      "title": "JoyAI-Video-Edit: Real-Time Open-Ended Video Editing with Autoregressive Diffusion",
+      "source": "arXiv",
+      "publishedAt": "2026-08-04T17:40:48Z",
+      "category": "Research Papers",
+      "pool": "in",
+      "kind": "strong-paper",
+      "researchPaper": { "arxivId": "2608.03974", "relevanceCue": "Video" }
+    },
+    {
+      "id": "rp-vibevoice",
+      "title": "VibeVoice Technical Report",
+      "source": "arXiv",
+      "publishedAt": "2026-07-15T00:00:00.000Z",
+      "category": "Research Papers",
+      "pool": "in",
+      "kind": "strong-paper",
+      "researchPaper": { "arxivId": "vibevoice", "relevanceCue": "Voice" }
+    },
+    {
+      "id": "rp-ltx2",
+      "title": "LTX-2: Efficient Joint Audio-Visual Foundation Model",
+      "source": "arXiv",
+      "publishedAt": "2026-07-01T00:00:00.000Z",
+      "category": "Research Papers",
+      "pool": "in",
+      "kind": "strong-paper",
+      "researchPaper": { "arxivId": "ltx-2", "relevanceCue": "Multimodal" }
+    },
+    {
+      "id": "rp-colleague",
+      "title": "COLLEAGUE.SKILL: Automated AI Skill Generation via Expert Knowledge Distillation",
+      "source": "arXiv",
+      "publishedAt": "2026-08-10T00:00:00.000Z",
+      "category": "Research Papers",
+      "pool": "in",
+      "kind": "strong-paper",
+      "researchPaper": { "arxivId": "colleague-skill", "relevanceCue": "Agents" }
+    },
+    {
+      "id": "rp-safety-hci",
+      "title": "Safety vs. Social Image: Co-Designing Protection Mechanisms Against Ableist Harassment with People with Disabilities in Social Virtual Reality",
+      "source": "arXiv",
+      "publishedAt": "2026-08-08T00:00:00.000Z",
+      "category": "Research Papers",
+      "pool": "in",
+      "kind": "strong-paper",
+      "researchPaper": { "arxivId": "safety-hci", "relevanceCue": "HCI" }
+    },
+    {
+      "id": "rp-matraix",
+      "title": "MatrAIx: Simulating the World with 8.3 Billion Persona Agents",
+      "source": "arXiv",
+      "publishedAt": "2026-07-22T00:00:00.000Z",
+      "category": "Research Papers",
+      "pool": "in",
+      "kind": "strong-paper",
+      "researchPaper": { "arxivId": "matraix", "relevanceCue": "Agents" }
+    },
+    {
+      "id": "rp-convex",
+      "title": "Exponential Convex Calibration Dimension for the Multi-Label Jaccard Measure",
+      "source": "arXiv",
+      "publishedAt": "2026-08-12T00:00:00.000Z",
+      "category": "Research Papers",
+      "pool": "out",
+      "kind": "fail-paper",
+      "tags": ["fail"],
+      "researchPaper": { "arxivId": "convex" }
+    },
+    {
+      "id": "rp-bagging",
+      "title": "Bagging Robustly Learns VC Classes with Linear Sample Complexity",
+      "source": "arXiv",
+      "publishedAt": "2026-08-11T00:00:00.000Z",
+      "category": "Research Papers",
+      "pool": "out",
+      "kind": "fail-paper",
+      "tags": ["fail"],
+      "researchPaper": { "arxivId": "bagging" }
+    },
+    {
+      "id": "rp-quotebench",
+      "title": "QuoteBench: How Matched Scores Can Hide Command-Path Failures",
+      "source": "arXiv",
+      "publishedAt": "2026-08-09T00:00:00.000Z",
+      "category": "Research Papers",
+      "pool": "out",
+      "kind": "borderline-paper",
+      "tags": ["borderline", "watch"],
+      "researchPaper": { "arxivId": "quotebench", "relevanceCue": "Eval" }
+    },
+    {
+      "id": "rp-vero",
+      "title": "Vero: Can AI Agents Build Formally Verified Software Repositories?",
+      "source": "arXiv",
+      "publishedAt": "2026-08-07T00:00:00.000Z",
+      "category": "Research Papers",
+      "pool": "out",
+      "kind": "borderline-paper",
+      "tags": ["borderline", "watch"],
+      "researchPaper": { "arxivId": "vero", "relevanceCue": "Agents" }
+    },
+    {
+      "id": "rp-autodesign",
+      "title": "AutoDesign: Meta-Harness Optimization for Long-Horizon Agentic Design",
+      "source": "arXiv",
+      "publishedAt": "2026-08-06T00:00:00.000Z",
+      "category": "Research Papers",
+      "pool": "out",
+      "kind": "borderline-paper",
+      "tags": ["borderline", "watch"],
+      "researchPaper": { "arxivId": "autodesign", "relevanceCue": "Agents" }
+    },
+    {
+      "id": "dc-mcp-cluster",
+      "title": "mcp: runtime reliability is a recurring production friction",
+      "source": "Developer Community",
+      "publishedAt": "2026-08-14T00:00:00.000Z",
+      "category": "Industry Trends",
+      "pool": "in",
+      "kind": "strong-friction",
+      "tags": ["developer-community", "friction", "mcp-runtime", "mcp"],
+      "native": { "authorName": "mcp", "subtitle": "FRICTION · 3 evidence · 4d", "comments": 3 }
+    },
+    {
+      "id": "dc-memory-solo",
+      "title": "Memory MCP JSON Parsing Error - All Tools Failing",
+      "source": "Developer Community",
+      "publishedAt": "2026-08-01T00:00:00.000Z",
+      "category": "Industry Trends",
+      "pool": "out",
+      "kind": "watch",
+      "tags": ["developer-community", "watch", "borderline"],
+      "native": { "authorName": "mcp" }
+    },
+    {
+      "id": "dc-http-retry",
+      "title": "Streamable HTTP reconnect exceeds retry budget",
+      "source": "Developer Community",
+      "publishedAt": "2026-08-15T00:00:00.000Z",
+      "category": "Industry Trends",
+      "pool": "out",
+      "kind": "watch",
+      "tags": ["developer-community", "watch", "borderline"],
+      "native": { "authorName": "mcp" }
+    },
+    {
+      "id": "dc-openai-fn",
+      "title": "Aborting a streaming Responses API request drops the function_call item",
+      "source": "Developer Community",
+      "publishedAt": "2026-08-15T00:00:00.000Z",
+      "category": "Industry Trends",
+      "pool": "out",
+      "kind": "watch",
+      "tags": ["developer-community", "watch", "borderline"],
+      "native": { "authorName": "openai-api" }
+    },
+    {
+      "id": "dc-session-watch",
+      "title": "Desktop app (Windows): cross-session messages silently dropped",
+      "source": "Developer Community",
+      "publishedAt": "2026-08-15T00:00:00.000Z",
+      "category": "Industry Trends",
+      "pool": "out",
+      "kind": "watch",
+      "tags": ["developer-community", "watch", "borderline"],
+      "native": { "authorName": "claude-code" }
+    },
+    {
+      "id": "dc-qwen-hn",
+      "title": "Qwen 3.8 27B",
+      "source": "Developer Community",
+      "publishedAt": "2026-08-14T00:00:00.000Z",
+      "category": "Industry Trends",
+      "pool": "out",
+      "kind": "fail-popularity",
+      "tags": ["fail", "hackernews"],
+      "native": { "points": 1125 }
+    },
+    {
+      "id": "dc-show-hn",
+      "title": "Show HN: ThoughtDAG",
+      "source": "Developer Community",
+      "publishedAt": "2026-08-15T00:00:00.000Z",
+      "category": "Industry Trends",
+      "pool": "out",
+      "kind": "fail",
+      "tags": ["fail"]
+    },
+    {
+      "id": "dc-stars",
+      "title": "ECC has 240k stars so it must be the default agent harness",
+      "source": "Developer Community",
+      "publishedAt": "2026-08-15T00:00:00.000Z",
+      "category": "Industry Trends",
+      "pool": "out",
+      "kind": "fail-stars",
+      "tags": ["fail"]
+    },
+    {
+      "id": "dc-claude-tools",
+      "title": "claude-code: tool calling is breaking multi-turn agent workflows",
+      "source": "Developer Community",
+      "publishedAt": "2026-08-15T08:00:00.000Z",
+      "category": "Industry Trends",
+      "pool": "in",
+      "kind": "strong-friction",
+      "tags": ["developer-community", "friction", "tool-calling", "claude-code"],
+      "native": { "authorName": "claude-code", "subtitle": "FRICTION · 3 evidence · 2d", "comments": 3 }
+    },
+    {
+      "id": "dc-claude-session",
+      "title": "claude-code: session state is dropping across turns",
+      "source": "Developer Community",
+      "publishedAt": "2026-08-15T09:00:00.000Z",
+      "category": "Industry Trends",
+      "pool": "in",
+      "kind": "strong-friction",
+      "tags": ["developer-community", "friction", "session-failure", "claude-code"],
+      "native": { "authorName": "claude-code", "subtitle": "FRICTION · 10 evidence · 3d", "comments": 10 }
+    },
+    {
+      "id": "dc-opencode-install",
+      "title": "opencode: install and platform setup is blocking adoption",
+      "source": "Developer Community",
+      "publishedAt": "2026-08-15T07:00:00.000Z",
+      "category": "Industry Trends",
+      "pool": "in",
+      "kind": "strong-friction",
+      "tags": ["developer-community", "friction", "install-platform", "opencode"],
+      "native": { "authorName": "opencode", "subtitle": "FRICTION · 7 evidence · 2d", "comments": 7 }
+    },
+    {
+      "id": "dc-skills-hn",
+      "title": "Claude Skills are awesome, maybe a bigger deal than MCP",
+      "source": "Developer Community",
+      "publishedAt": "2026-08-13T00:00:00.000Z",
+      "category": "Industry Trends",
+      "pool": "out",
+      "kind": "watch",
+      "tags": ["developer-community", "watch", "borderline"],
+      "native": { "authorName": "claude-code" }
+    }
+  ]
+}

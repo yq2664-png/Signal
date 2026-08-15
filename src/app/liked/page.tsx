@@ -33,7 +33,7 @@ export default function LikedPage() {
       emptyMessage={
         user
           ? "No likes yet. Heart items in Feed to collect them here."
-          : "Sign in to like items and build your personalized ranking."
+          : "Sign in to like items across devices."
       }
       emptyAction={
         user
