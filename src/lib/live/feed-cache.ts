@@ -2,11 +2,20 @@ import { mkdir, readFile, rename, writeFile } from "fs/promises";
 import path from "path";
 import type { FeedPayload } from "@/lib/live/aggregate";
 import { getCacheDir } from "@/lib/live/cache-dir";
+import { publicReadUrl } from "@/lib/live/public-read-url";
 
-const CACHE_FILE = path.join(getCacheDir(), "feed-snapshot.json");
+function cacheFile() {
+  return path.join(getCacheDir(), "feed-snapshot.json");
+}
 
 /** Serve / refresh cadence for the aggregated feed */
 export const FEED_TTL_MS = 30 * 60 * 1000;
+
+/**
+ * Max time /api/feed may wait for a live crawl.
+ * Railway Hikari closes the request around ~60–72s with 502 upstream error.
+ */
+export const FEED_REQUEST_WAIT_MS = 2_000;
 
 type DiskSnapshot = {
   fetchedAt: string;
@@ -23,7 +32,7 @@ let inflight: Promise<FeedPayload> | null = null;
 
 async function loadDisk(): Promise<MemoryEntry | null> {
   try {
-    const raw = await readFile(CACHE_FILE, "utf8");
+    const raw = await readFile(cacheFile(), "utf8");
     const parsed = JSON.parse(raw) as DiskSnapshot;
     if (!parsed?.payload?.items || !parsed.fetchedAt) return null;
     const fetchedAtMs = Date.parse(parsed.fetchedAt);
@@ -40,10 +49,9 @@ async function saveDisk(entry: MemoryEntry): Promise<void> {
     fetchedAt: new Date(entry.fetchedAtMs).toISOString(),
     payload: entry.payload,
   };
-  const tmp = `${CACHE_FILE}.${process.pid}.tmp`;
-  // Compact JSON — snapshot is replaced wholesale each refresh (~feed size)
+  const tmp = `${cacheFile()}.${process.pid}.tmp`;
   await writeFile(tmp, JSON.stringify(snap), "utf8");
-  await rename(tmp, CACHE_FILE);
+  await rename(tmp, cacheFile());
 }
 
 function withCacheMeta(
@@ -54,14 +62,63 @@ function withCacheMeta(
   const ageMs = Math.max(0, Date.now() - fetchedAtMs);
   return {
     ...payload,
+    items: payload.items.map((item) => ({
+      ...item,
+      url: publicReadUrl(item.url),
+      officialLaunch: item.officialLaunch
+        ? {
+            ...item.officialLaunch,
+            supportingSources: item.officialLaunch.supportingSources.map(
+              (source) => ({
+                ...source,
+                url: publicReadUrl(source.url),
+              })
+            ),
+          }
+        : item.officialLaunch,
+    })),
     meta: {
       ...payload.meta,
       fetchedAt: new Date(fetchedAtMs).toISOString(),
       fromCache,
+      warming: false,
       cacheAgeSec: Math.round(ageMs / 1000),
       ttlSec: Math.round(FEED_TTL_MS / 1000),
     },
   };
+}
+
+function warmingPayload(): FeedPayload {
+  return {
+    items: [],
+    insights: [],
+    meta: {
+      liveCount: 0,
+      enrichedCount: 0,
+      enrichCacheHits: 0,
+      fetchedAt: new Date().toISOString(),
+      errors: ["Feed snapshot is rebuilding"],
+      fromCache: false,
+      warming: true,
+      cacheAgeSec: 0,
+      ttlSec: Math.round(FEED_TTL_MS / 1000),
+    },
+  };
+}
+
+async function waitFor<T>(
+  promise: Promise<T>,
+  ms: number
+): Promise<T | undefined> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<undefined>((resolve) => {
+    timer = setTimeout(() => resolve(undefined), ms);
+  });
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 }
 
 async function runFetch(
@@ -87,11 +144,18 @@ async function runFetch(
   return inflight;
 }
 
+function kickRefresh(fetchFresh: () => Promise<FeedPayload>): void {
+  void runFetch(fetchFresh).catch((err) => {
+    console.error("[feed-cache] refresh failed", err);
+  });
+}
+
 /**
  * Fast feed access:
- * - Fresh snapshot (< 30m): return immediately
- * - Stale snapshot: return immediately + refresh in background
- * - No snapshot / force: await a full aggregate
+ * - Snapshot available: return immediately (refresh in background if stale/forced)
+ * - No snapshot: start crawl, wait briefly, then return a 200 warming payload
+ *
+ * Never block the HTTP request on a full live aggregate — that 502s Railway.
  */
 export async function getCachedFeed(
   fetchFresh: () => Promise<FeedPayload>,
@@ -104,23 +168,28 @@ export async function getCachedFeed(
     memory = await loadDisk();
   }
 
-  if (!force && memory) {
-    const age = now - memory.fetchedAtMs;
-    const fresh = age < FEED_TTL_MS;
-    const payload = withCacheMeta(memory.payload, memory.fetchedAtMs, true);
+  const stale = memory ? now - memory.fetchedAtMs >= FEED_TTL_MS : true;
+  if (force || !memory || stale) {
+    kickRefresh(fetchFresh);
+  }
 
-    if (!fresh && !inflight) {
-      void runFetch(fetchFresh).catch((err) => {
-        console.error("[feed-cache] background refresh failed", err);
-      });
+  if (memory) {
+    return withCacheMeta(memory.payload, memory.fetchedAtMs, true);
+  }
+
+  if (inflight) {
+    try {
+      const done = await waitFor(inflight, FEED_REQUEST_WAIT_MS);
+      if (done) return done;
+    } catch (error) {
+      console.error("[feed-cache] in-flight crawl failed", error);
     }
-
-    return payload;
   }
 
-  if (force && inflight) {
-    return inflight;
-  }
+  return warmingPayload();
+}
 
-  return runFetch(fetchFresh);
+export function resetFeedCacheForTests(): void {
+  memory = null;
+  inflight = null;
 }

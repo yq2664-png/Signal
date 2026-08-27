@@ -1,4 +1,5 @@
 import { toFeedItem, tierFromScores } from "@/lib/live/normalize";
+import { publicReadUrl } from "@/lib/live/public-read-url";
 import type {
   Category,
   FeedItem,
@@ -36,7 +37,7 @@ export function officialLaunchEventToFeedItem(
     source: event.organizationName,
     publishedAt: event.publishedAt,
     category: categoryFor(event),
-    url: primary.url,
+    url: publicReadUrl(primary.url),
     imageUrl: primary.imageUrl,
     tags: [
       "live",
@@ -71,7 +72,7 @@ export function officialLaunchEventToFeedItem(
         )
         .map((source) => ({
           title: source.title,
-          url: source.url,
+          url: publicReadUrl(source.url),
           sourceType: source.sourceType,
         })),
     },

@@ -146,21 +146,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const params = new URLSearchParams(window.location.search);
     const auth = params.get("auth");
     if (!auth) return;
-    if (auth === "ok") {
-      void refreshAuth();
-      toast("Signed in. Likes and saves will sync.", "success");
-      setAuthMessage(null);
-      setAuthOpen(false);
-    } else if (auth === "expired") {
-      toast("Sign-in failed or expired. Try again.", "error");
-      setAuthOpen(true);
-      setAuthMessage("Google sign-in failed or expired. Try again.");
-    }
     params.delete("auth");
     const next = `${window.location.pathname}${
       params.toString() ? `?${params}` : ""
     }`;
     window.history.replaceState({}, "", next);
+
+    if (auth === "expired") {
+      toast("Sign-in failed or expired. Try again.", "error");
+      setAuthOpen(true);
+      setAuthMessage("Google sign-in failed or expired. Try again.");
+      return;
+    }
+
+    if (auth !== "ok") return;
+
+    void (async () => {
+      const supabase = createClient();
+      const {
+        data: { user: sessionUser },
+      } = await supabase.auth.getUser();
+      await refreshAuth();
+      if (sessionUser) {
+        toast("Signed in. Likes and saves will sync.", "success");
+        setAuthMessage(null);
+        setAuthOpen(false);
+      } else {
+        toast(
+          "Signed in with Google, but the session did not stick. Try again.",
+          "error"
+        );
+        setAuthOpen(true);
+        setAuthMessage(
+          "Session cookie was missing after Google sign-in. Try Continue with Google again."
+        );
+      }
+    })();
   }, [refreshAuth, toast]);
 
   const openAuth = useCallback((message?: string) => {
@@ -193,15 +214,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     const supabase = createClient();
     const redirectTo = `${window.location.origin}/auth/callback`;
-    const { error } = await supabase.auth.signInWithOAuth({
+    try {
+      sessionStorage.setItem("signal-auth-return", window.location.origin);
+    } catch {
+      /* ignore */
+    }
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo,
+        skipBrowserRedirect: true,
+        queryParams: {
+          prompt: "select_account",
+          redirect_to: redirectTo,
+        },
       },
     });
-    if (error) {
-      return { ok: false, message: error.message };
+    if (error || !data.url) {
+      return {
+        ok: false,
+        message: error?.message ?? "Google sign-in is not available.",
+      };
     }
+    const oauthUrl = new URL(data.url);
+    oauthUrl.searchParams.set("redirect_to", redirectTo);
+    window.location.assign(oauthUrl.toString());
     return { ok: true, message: "Redirecting to Google…" };
   }, [configured]);
 

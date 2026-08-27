@@ -4,16 +4,14 @@ import { useEffect, useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import { FeedFilters, defaultFilters, type FeedFiltersState } from "@/components/feed/FeedFilters";
 import { ImpactBriefDrawer } from "@/components/feed/ImpactBriefDrawer";
-import { RankedFeedList } from "@/components/feed/RankedFeedList";
-import { SourceGroupChips } from "@/components/feed/SourceBoard";
+import { SourceBoard, SourceGroupChips } from "@/components/feed/SourceBoard";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/Button";
 import { useFeed } from "@/context/FeedContext";
-import { insightForItem } from "@/lib/surface/insight-link";
 import { groupIdForSource, type SourceGroupId } from "@/lib/source-groups";
 
 export function FeedPage() {
-  const { items, insights, loading, error, refresh } = useFeed();
+  const { items, loading, error, refresh } = useFeed();
   const [filters, setFilters] = useState<FeedFiltersState>(defaultFilters);
   const [groupFilter, setGroupFilter] = useState<SourceGroupId | "all">("all");
   const [toolsOpen, setToolsOpen] = useState(false);
@@ -85,24 +83,26 @@ export function FeedPage() {
       ) : null}
 
       <div className="relative flex h-full min-h-0 flex-col">
+        <div
+          className="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--border)] px-4 py-2"
+          style={{ borderBottom: "1px solid var(--border)" }}
+        >
+          <SourceGroupChips
+            active={groupFilter}
+            onChange={setGroupFilter}
+            counts={groupCounts}
+          />
+        </div>
         {toolsOpen ? (
           <FeedFilters
             value={filters}
             onChange={setFilters}
             resultCount={filtered.length}
-            extra={
-              <SourceGroupChips
-                active={groupFilter}
-                onChange={setGroupFilter}
-                counts={groupCounts}
-              />
-            }
           />
         ) : null}
         <div className="min-h-0 flex-1">
-          <RankedFeedList
+          <SourceBoard
             items={filtered}
-            insights={insights}
             selectedId={selected?.id}
             onSelect={(id) => {
               setSelectedId(id);
@@ -121,7 +121,6 @@ export function FeedPage() {
         {selected && briefOpen ? (
           <ImpactBriefDrawer
             item={selected}
-            insight={insightForItem(selected, insights)}
             onClose={() => setBriefOpen(false)}
           />
         ) : null}

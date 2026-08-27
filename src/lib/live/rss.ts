@@ -16,7 +16,7 @@ type RssItem = {
   pubDate?: string;
   creator?: string;
   "dc:creator"?: string;
-  categories?: string[];
+  categories?: unknown[];
   enclosure?: { url?: string; type?: string; length?: string };
   "media:content"?: unknown;
   "media:thumbnail"?: unknown;
@@ -252,6 +252,21 @@ function pickImage(
   return firstImgSrc(item.content);
 }
 
+/** rss-parser sometimes yields category objects that throw in String(). */
+export function rssCategoryLabel(value: unknown): string {
+  if (typeof value === "string") return value.trim();
+  if (typeof value === "number" || typeof value === "boolean") {
+    return String(value).trim();
+  }
+  if (!value || typeof value !== "object") return "";
+  const record = value as Record<string, unknown>;
+  for (const key of ["_", "#", "#text", "term", "name"]) {
+    const inner = record[key];
+    if (typeof inner === "string" && inner.trim()) return inner.trim();
+  }
+  return "";
+}
+
 export async function fetchRssFeed(config: RssSourceConfig): Promise<FeedItem[]> {
   try {
     const res = await fetch(config.url, {
@@ -279,7 +294,9 @@ export async function fetchRssFeed(config: RssSourceConfig): Promise<FeedItem[]>
       })
       .slice(0, limit)
       .map((item) => {
-        const link = item.link || String(item.guid);
+        const link =
+          item.link ||
+          (typeof item.guid === "string" ? item.guid : rssCategoryLabel(item.guid));
         const summary =
           item.contentSnippet ||
           stripHtml(item.content ?? "") ||
@@ -293,7 +310,7 @@ export async function fetchRssFeed(config: RssSourceConfig): Promise<FeedItem[]>
 
         const creator = item.creator || item["dc:creator"] || undefined;
         const categories = (item.categories ?? [])
-          .map((c) => String(c).trim())
+          .map(rssCategoryLabel)
           .filter(Boolean)
           .slice(0, 4);
         const imageUrl = pickImage(item, mediaByLink);

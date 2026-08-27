@@ -2,12 +2,10 @@
 
 import { PullToRefresh } from "@/components/feed/PullToRefresh";
 import { FeedRow } from "@/components/feed/FeedItem";
-import type { FeedItem, Insight } from "@/lib/types";
-import { insightForItem } from "@/lib/surface/insight-link";
+import type { FeedItem } from "@/lib/types";
 
 export function RankedFeedList({
   items,
-  insights,
   selectedId,
   onSelect,
   onRefresh,
@@ -15,7 +13,6 @@ export function RankedFeedList({
   emptyMessage = "No updates match these filters.",
 }: {
   items: FeedItem[];
-  insights: Insight[];
   selectedId?: string;
   onSelect: (id: string) => void;
   onRefresh?: () => void;
@@ -35,7 +32,6 @@ export function RankedFeedList({
             item={item}
             index={index}
             selected={selectedId === item.id}
-            insight={insightForItem(item, insights)}
             onSelect={() => onSelect(item.id)}
           />
         ))}

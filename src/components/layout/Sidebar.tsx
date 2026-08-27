@@ -8,7 +8,6 @@ import {
   Heart,
   LayoutList,
   LogOut,
-  Sparkles,
   Radio,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
@@ -17,7 +16,6 @@ import { useLikes } from "@/context/LikesContext";
 
 const primaryNav = [
   { href: "/feed", label: "Feed", icon: LayoutList },
-  { href: "/insights", label: "Insights", icon: Sparkles },
 ];
 
 const libraryNav = [

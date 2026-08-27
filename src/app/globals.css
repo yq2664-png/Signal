@@ -81,6 +81,21 @@ button {
   cursor: pointer;
 }
 
+.source-group-chip {
+  background: var(--bg-overlay);
+  color: var(--text-muted);
+}
+
+.source-group-chip:hover {
+  color: var(--text-body);
+}
+
+.source-group-chip[data-active="true"],
+.source-group-chip[data-active="true"]:hover {
+  background: var(--cta);
+  color: var(--cta-text);
+}
+
 input,
 select {
   font: inherit;

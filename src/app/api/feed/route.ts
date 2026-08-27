@@ -10,10 +10,16 @@ export async function GET(req: NextRequest) {
     const payload = await getCachedFeed(getAggregatedFeed, { force });
     const maxAge = Math.round(FEED_TTL_MS / 1000);
 
+    const cacheState = payload.meta.warming
+      ? "WARMING"
+      : payload.meta.fromCache
+        ? "HIT"
+        : "MISS";
+
     return NextResponse.json(payload, {
       headers: {
         "Cache-Control": `public, max-age=0, s-maxage=${maxAge}, stale-while-revalidate=${maxAge}`,
-        "X-Feed-Cache": payload.meta.fromCache ? "HIT" : "MISS",
+        "X-Feed-Cache": cacheState,
         "X-Feed-Cache-Age": String(payload.meta.cacheAgeSec ?? 0),
       },
     });

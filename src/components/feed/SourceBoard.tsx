@@ -21,8 +21,9 @@ export function SourceGroupChips({
   onChange: (id: SourceGroupId | "all") => void;
   counts: Record<SourceGroupId | "all", number>;
 }) {
-  const chips: { id: SourceGroupId; label: string }[] = sourceGroups.map(
-    (group) => ({
+  const chips: { id: SourceGroupId | "all"; label: string }[] = [
+    { id: "all", label: "All" },
+    ...sourceGroups.map((group) => ({
       id: group.id,
       label:
         group.id === "labs"
@@ -30,8 +31,8 @@ export function SourceGroupChips({
           : group.id === "research"
             ? "Research"
             : "Other",
-    })
-  );
+    })),
+  ];
 
   return (
     <div className="flex flex-wrap gap-1">
@@ -39,13 +40,9 @@ export function SourceGroupChips({
         <button
           key={chip.id}
           type="button"
-          onClick={() => onChange(active === chip.id ? "all" : chip.id)}
-          className={clsx(
-            "rounded-[4px] px-2 py-1 text-[11px] transition-colors duration-100",
-            active === chip.id
-              ? "bg-[var(--bg-active)] text-[var(--text-primary)]"
-              : "bg-[var(--bg-overlay)] text-[var(--text-muted)] hover:text-[var(--text-body)]"
-          )}
+          onClick={() => onChange(chip.id)}
+          className="source-group-chip rounded-[4px] px-2.5 py-1 text-[11px] transition-colors duration-100"
+          data-active={active === chip.id ? "true" : undefined}
           style={{
             transitionTimingFunction: "cubic-bezier(0.25, 0.46, 0.45, 0.94)",
           }}

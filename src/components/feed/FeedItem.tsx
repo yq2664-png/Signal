@@ -2,14 +2,13 @@
 
 import { clsx } from "clsx";
 import { Bookmark, ExternalLink, Heart } from "lucide-react";
-import Link from "next/link";
 import { FlagBadCaseButton } from "@/components/feed/FlagBadCaseButton";
 import { SourceLogo } from "@/components/feed/SourceLogo";
 import { Button } from "@/components/ui/Button";
 import { ValueCueBadge } from "@/components/ui/Badge";
 import { useBookmarks } from "@/context/BookmarksContext";
 import { useLikes } from "@/context/LikesContext";
-import type { FeedItem, Insight } from "@/lib/types";
+import type { FeedItem } from "@/lib/types";
 import { presentBrief } from "@/lib/surface/present-brief";
 import { formatRelative } from "@/lib/utils";
 
@@ -17,13 +16,11 @@ export function FeedRow({
   item,
   index,
   selected,
-  insight,
   onSelect,
 }: {
   item: FeedItem;
   index: number;
   selected?: boolean;
-  insight?: Insight;
   onSelect?: () => void;
 }) {
   const rank = String(index + 1).padStart(2, "0");
@@ -70,15 +67,6 @@ export function FeedRow({
               {item.summary}
             </p>
           ) : null}
-          {insight ? (
-            <Link
-              href={`/insights?id=${encodeURIComponent(insight.insightId)}`}
-              onClick={(event) => event.stopPropagation()}
-              className="mt-2 inline-block text-[12px] text-[var(--text-secondary)] underline decoration-[var(--border)] underline-offset-2 hover:text-[var(--text-primary)]"
-            >
-              Part of an emerging pattern →
-            </Link>
-          ) : null}
         </div>
       </div>
     </article>
@@ -108,10 +96,8 @@ const BRIEF_SECTIONS: Array<{
 
 export function ImpactBriefPanel({
   item,
-  insight,
 }: {
   item: FeedItem;
-  insight?: Insight;
 }) {
   const brief = presentBrief(item.brief);
   const sections = BRIEF_SECTIONS.filter((section) => brief[section.key]);
@@ -171,14 +157,6 @@ export function ImpactBriefPanel({
             {saved ? "Saved" : "Save"}
           </Button>
         </div>
-        {insight ? (
-          <Link
-            href={`/insights?id=${encodeURIComponent(insight.insightId)}`}
-            className="mt-3 inline-block text-[12px] text-[var(--text-secondary)] underline decoration-[var(--border)] underline-offset-2 hover:text-[var(--text-primary)]"
-          >
-            Part of an emerging pattern →
-          </Link>
-        ) : null}
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">

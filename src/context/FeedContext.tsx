@@ -35,9 +35,11 @@ export function FeedProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
   const forceRef = useRef(false);
+  const warmingTries = useRef(0);
 
   useEffect(() => {
     let cancelled = false;
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
     const force = forceRef.current;
     forceRef.current = false;
 
@@ -53,30 +55,47 @@ export function FeedProvider({ children }: { children: ReactNode }) {
       })
       .then((payload) => {
         if (cancelled) return;
-        setItems(payload.items);
-        setInsights(payload.insights ?? []);
+        if (payload.items.length > 0) {
+          setItems(payload.items);
+          setInsights(payload.insights ?? []);
+        } else if (!payload.meta.warming) {
+          setItems(payload.items);
+          setInsights(payload.insights ?? []);
+        }
         setMeta(payload.meta);
+
+        if (payload.meta.warming && warmingTries.current < 30) {
+          warmingTries.current += 1;
+          retryTimer = setTimeout(() => setTick((t) => t + 1), 4_000);
+          return;
+        }
+        if (payload.meta.warming) {
+          setError("Feed is still building");
+        }
+        warmingTries.current = 0;
+        setLoading(false);
       })
       .catch((err: unknown) => {
         if (cancelled) return;
         setError(err instanceof Error ? err.message : "Failed to load live feed");
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
+        setLoading(false);
       });
 
     return () => {
       cancelled = true;
+      if (retryTimer) clearTimeout(retryTimer);
     };
   }, [tick]);
 
   const refresh = useCallback(() => {
     forceRef.current = false;
+    warmingTries.current = 0;
     setTick((t) => t + 1);
   }, []);
 
   const forceRefresh = useCallback(() => {
     forceRef.current = true;
+    warmingTries.current = 0;
     setTick((t) => t + 1);
   }, []);
 

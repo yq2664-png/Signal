@@ -28,6 +28,8 @@ export type FeedMeta = {
   cacheAgeSec?: number;
   /** Snapshot TTL in seconds */
   ttlSec?: number;
+  /** True when a live crawl is still running and this response has no items yet */
+  warming?: boolean;
 };
 
 export type FeedPayload = {

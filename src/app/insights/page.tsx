@@ -1,10 +1,5 @@
-import { Suspense } from "react";
-import { InsightsPage } from "@/components/insights/InsightsPage";
+import { redirect } from "next/navigation";
 
 export default function Page() {
-  return (
-    <Suspense>
-      <InsightsPage />
-    </Suspense>
-  );
+  redirect("/feed");
 }
