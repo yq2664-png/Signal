@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { getSupabasePublicEnv } from "@/lib/supabase/env";
+import { timeoutAfter } from "@/lib/timeout";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -24,7 +25,14 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  // Refresh session if expired — required for Server Components
-  await supabase.auth.getUser();
+  // Refresh session if expired. Never block the page if Auth is slow.
+  try {
+    await Promise.race([
+      supabase.auth.getUser(),
+      timeoutAfter(3_000, "auth session refresh"),
+    ]);
+  } catch (error) {
+    console.error("[auth/middleware]", error);
+  }
   return supabaseResponse;
 }

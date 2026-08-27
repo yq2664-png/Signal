@@ -11,7 +11,7 @@ import { useFeed } from "@/context/FeedContext";
 import { groupIdForSource, type SourceGroupId } from "@/lib/source-groups";
 
 export function FeedPage() {
-  const { items, loading, error, refresh } = useFeed();
+  const { items, loading, error, meta, refresh } = useFeed();
   const [filters, setFilters] = useState<FeedFiltersState>(defaultFilters);
   const [groupFilter, setGroupFilter] = useState<SourceGroupId | "all">("all");
   const [toolsOpen, setToolsOpen] = useState(false);
@@ -109,11 +109,13 @@ export function FeedPage() {
               setBriefOpen(true);
             }}
             onRefresh={refresh}
-            refreshing={loading}
+            refreshing={loading || Boolean(meta?.warming)}
             emptyMessage={
               loading
                 ? "Loading…"
-                : "No updates match these filters."
+                : meta?.warming
+                  ? "Building the live feed…"
+                  : "No updates match these filters."
             }
           />
         </div>

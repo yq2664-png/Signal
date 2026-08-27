@@ -14,6 +14,7 @@ import type { UserPrefs } from "@/lib/personalization";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { useToast } from "@/components/ui/Toast";
+import { timeoutAfter } from "@/lib/timeout";
 
 export type AuthUser = {
   id: string;
@@ -77,7 +78,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
     try {
-      const data = await loadUserPrefs(supabase);
+      const data = await Promise.race([
+        loadUserPrefs(supabase),
+        timeoutAfter(8_000, "library"),
+      ]);
       setPrefs(data.prefs);
       setCounts(data.counts);
     } catch (err) {
@@ -98,7 +102,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const supabase = createClient();
       const {
         data: { user: sessionUser },
-      } = await supabase.auth.getUser();
+      } = await Promise.race([
+        supabase.auth.getUser(),
+        timeoutAfter(5_000, "auth lookup"),
+      ]);
       setUser((prev) => {
         const next = sessionUser
           ? toAuthUser(sessionUser.id, sessionUser.email ?? undefined)
@@ -163,9 +170,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     void (async () => {
       const supabase = createClient();
-      const {
-        data: { user: sessionUser },
-      } = await supabase.auth.getUser();
+      let sessionUser: { id: string; email?: string } | null = null;
+      try {
+        const result = await Promise.race([
+          supabase.auth.getUser(),
+          timeoutAfter(5_000, "auth lookup"),
+        ]);
+        sessionUser = result.data.user;
+      } catch (err) {
+        console.error("[auth] session check after callback", err);
+      }
       await refreshAuth();
       if (sessionUser) {
         toast("Signed in. Likes and saves will sync.", "success");

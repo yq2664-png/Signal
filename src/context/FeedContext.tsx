@@ -43,12 +43,16 @@ export function FeedProvider({ children }: { children: ReactNode }) {
     const force = forceRef.current;
     forceRef.current = false;
 
-    setLoading(true);
-    setError(null);
+    if (warmingTries.current === 0) {
+      setLoading(true);
+      setError(null);
+    }
 
     const url = force ? "/api/feed?force=1" : "/api/feed";
+    const controller = new AbortController();
+    const abortTimer = setTimeout(() => controller.abort(), 12_000);
 
-    fetch(url, { cache: "no-store" })
+    fetch(url, { cache: "no-store", signal: controller.signal })
       .then(async (res) => {
         if (!res.ok) throw new Error(`Feed API ${res.status}`);
         return res.json() as Promise<FeedPayload>;
@@ -64,9 +68,10 @@ export function FeedProvider({ children }: { children: ReactNode }) {
         }
         setMeta(payload.meta);
 
-        if (payload.meta.warming && warmingTries.current < 30) {
+        if (payload.meta.warming && warmingTries.current < 10) {
           warmingTries.current += 1;
-          retryTimer = setTimeout(() => setTick((t) => t + 1), 4_000);
+          setLoading(false);
+          retryTimer = setTimeout(() => setTick((t) => t + 1), 2_000);
           return;
         }
         if (payload.meta.warming) {
@@ -77,12 +82,27 @@ export function FeedProvider({ children }: { children: ReactNode }) {
       })
       .catch((err: unknown) => {
         if (cancelled) return;
-        setError(err instanceof Error ? err.message : "Failed to load live feed");
+        const aborted =
+          err instanceof DOMException
+            ? err.name === "AbortError"
+            : err instanceof Error && err.name === "AbortError";
+        setError(
+          aborted
+            ? "Feed request timed out"
+            : err instanceof Error
+              ? err.message
+              : "Failed to load live feed"
+        );
         setLoading(false);
+      })
+      .finally(() => {
+        clearTimeout(abortTimer);
       });
 
     return () => {
       cancelled = true;
+      controller.abort();
+      clearTimeout(abortTimer);
       if (retryTimer) clearTimeout(retryTimer);
     };
   }, [tick]);

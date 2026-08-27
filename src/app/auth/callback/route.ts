@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { getSupabasePublicEnv } from "@/lib/supabase/env";
+import { timeoutAfter } from "@/lib/timeout";
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
@@ -38,7 +39,18 @@ export async function GET(request: NextRequest) {
     },
   });
 
-  const { error } = await supabase.auth.exchangeCodeForSession(code);
+  let error: { message: string } | null = null;
+  try {
+    const exchanged = await Promise.race([
+      supabase.auth.exchangeCodeForSession(code),
+      timeoutAfter(8_000, "auth code exchange"),
+    ]);
+    error = exchanged.error;
+  } catch (caught) {
+    error = {
+      message: caught instanceof Error ? caught.message : "auth code exchange failed",
+    };
+  }
   const response = redirect(!error);
   pending.forEach(({ name, value, options }) => {
     response.cookies.set(name, value, options);
