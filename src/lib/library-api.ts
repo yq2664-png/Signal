@@ -30,27 +30,39 @@ export async function toggleLibraryItem(
   userId: string,
   item: FeedItem
 ): Promise<{ active: boolean; items: FeedItem[] }> {
-  const { data: existing, error: lookupError } = await supabase
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const sessionUserId = session?.user.id;
+  if (!sessionUserId) {
+    throw new Error("Sign-in expired. Sign in again, then retry.");
+  }
+  if (sessionUserId !== userId) {
+    throw new Error("Sign-in expired. Sign in again, then retry.");
+  }
+
+  const { data: rows, error: lookupError } = await supabase
     .from(table(kind))
     .select("item_id")
-    .eq("user_id", userId)
+    .eq("user_id", sessionUserId)
     .eq("item_id", item.id)
-    .maybeSingle();
+    .limit(1);
 
   if (lookupError) throw lookupError;
 
+  const existing = rows?.[0];
   if (existing) {
     const { error } = await supabase
       .from(table(kind))
       .delete()
-      .eq("user_id", userId)
+      .eq("user_id", sessionUserId)
       .eq("item_id", item.id);
     if (error) throw error;
   } else {
     const { error } = await supabase.from(table(kind)).upsert({
-      user_id: userId,
+      user_id: sessionUserId,
       item_id: item.id,
-      item_json: toLibraryRecord(item),
+      item_json: JSON.parse(JSON.stringify(toLibraryRecord(item))),
     });
     if (error) throw error;
   }

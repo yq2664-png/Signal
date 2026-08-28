@@ -1,4 +1,5 @@
 import { rewriteFeedTitle } from "@/lib/live/headlines";
+import { liveFetchOptions } from "@/lib/live/live-fetch";
 import { slugId, stripHtml, toFeedItem } from "@/lib/live/normalize";
 import { enrichOgImages } from "@/lib/live/og-image";
 import type { FeedItem } from "@/lib/types";
@@ -46,7 +47,7 @@ export async function fetchXinZhiYuan(limit = 6): Promise<FeedItem[]> {
         "User-Agent": "SIGNAL-AI-Intelligence/0.1 (+local-dev)",
         Accept: "application/json",
       },
-      next: { revalidate: 900 },
+      ...liveFetchOptions(900),
       signal: AbortSignal.timeout(15000),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);

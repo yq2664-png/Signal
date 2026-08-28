@@ -114,6 +114,7 @@ describe("getCachedFeed request budget", () => {
     expect(elapsed).toBeLessThan(1_000);
     expect(payload.meta.warming).toBe(false);
     expect(payload.meta.fromCache).toBe(true);
+    expect(payload.meta.pendingRefresh).toBe(true);
     expect(payload.items[0]?.title).toBe("Cached launch");
     expect(fetchFresh).toHaveBeenCalledOnce();
   });
@@ -156,6 +157,62 @@ describe("getCachedFeed request budget", () => {
 
     expect(forced.items[0]?.title).toBe("First");
     expect(forced.meta.fromCache).toBe(true);
+    expect(forced.meta.pendingRefresh).toBe(true);
+    expect(fetchFresh).toHaveBeenCalledOnce();
+  });
+
+  it("marks a force refresh as pending instead of hiding the current snapshot", async () => {
+    await getCachedFeed(async () => samplePayload("Live"));
+    const hanging = vi.fn(
+      () =>
+        new Promise<FeedPayload>(() => {
+          /* hang */
+        })
+    );
+
+    const started = Date.now();
+    const forced = await getCachedFeed(hanging, { force: true });
+    const elapsed = Date.now() - started;
+
+    expect(elapsed).toBeLessThan(1_000);
+    expect(forced.items[0]?.title).toBe("Live");
+    expect(forced.meta.pendingRefresh).toBe(true);
+  });
+
+  it("keeps pendingRefresh on a soft read while a crawl is still in flight", async () => {
+    await getCachedFeed(async () => samplePayload("Live"));
+    const hanging = vi.fn(
+      () =>
+        new Promise<FeedPayload>(() => {
+          /* hang */
+        })
+    );
+
+    await getCachedFeed(hanging, { force: true });
+    const polled = await getCachedFeed(async () => samplePayload("Should not run"));
+
+    expect(polled.items[0]?.title).toBe("Live");
+    expect(polled.meta.pendingRefresh).toBe(true);
+    expect(hanging).toHaveBeenCalledOnce();
+  });
+
+  it("force-refresh recrawls against the current snapshot instead of the full pipeline", async () => {
+    await getCachedFeed(async () => samplePayload("First"));
+    const fetchFresh = vi.fn(async (ctx?: { mode?: string; existing?: FeedPayload }) => {
+      expect(ctx?.mode).toBe("fast");
+      expect(ctx?.existing?.items[0]?.title).toBe("First");
+      return samplePayload("Second");
+    });
+
+    const forced = await getCachedFeed(fetchFresh, { force: true });
+    expect(forced.items[0]?.title).toBe("First");
+    expect(forced.meta.pendingRefresh).toBe(true);
+
+    await vi.waitFor(async () => {
+      const next = await getCachedFeed(async () => samplePayload("Should not replace"));
+      expect(next.items[0]?.title).toBe("Second");
+      expect(next.meta.pendingRefresh).toBe(false);
+    });
     expect(fetchFresh).toHaveBeenCalledOnce();
   });
 });

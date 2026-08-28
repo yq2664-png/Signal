@@ -1,4 +1,5 @@
 import type { FeedItem } from "@/lib/types";
+import { liveFetchOptions } from "@/lib/live/live-fetch";
 import { slugId, toFeedItem } from "@/lib/live/normalize";
 
 type YtThumbnail = { url?: string; width?: number; height?: number };
@@ -74,7 +75,7 @@ async function fetchVideoDetails(
   url.searchParams.set("id", ids.join(","));
   url.searchParams.set("key", key);
 
-  const res = await fetch(url.toString(), { next: { revalidate: 1800 } });
+  const res = await fetch(url.toString(), { ...liveFetchOptions(1800) });
   if (!res.ok) return map;
   const data = (await res.json()) as YtVideosResponse;
   for (const item of data.items ?? []) {
@@ -103,7 +104,7 @@ export async function fetchYouTube(limit = 8): Promise<FeedItem[]> {
   url.searchParams.set("key", key);
 
   const res = await fetch(url.toString(), {
-    next: { revalidate: 1800 },
+    ...liveFetchOptions(1800),
   });
 
   const data = (await res.json()) as YtSearchResponse;

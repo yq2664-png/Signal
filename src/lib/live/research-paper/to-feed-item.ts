@@ -53,6 +53,8 @@ export function researchPaperToFeedItem(
     researchPaper: {
       arxivId: paper.arxivId,
       relevanceCue: cue,
+      venue: paper.venue,
+      categories: paper.categories.slice(0, 3),
     },
   };
 }

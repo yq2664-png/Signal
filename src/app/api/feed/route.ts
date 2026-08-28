@@ -16,9 +16,14 @@ export async function GET(req: NextRequest) {
         ? "HIT"
         : "MISS";
 
+    const skipStore =
+      force || payload.meta.warming || payload.meta.pendingRefresh;
+
     return NextResponse.json(payload, {
       headers: {
-        "Cache-Control": `public, max-age=0, s-maxage=${maxAge}, stale-while-revalidate=${maxAge}`,
+        "Cache-Control": skipStore
+          ? "private, no-store"
+          : `public, max-age=0, s-maxage=${maxAge}, stale-while-revalidate=${maxAge}`,
         "X-Feed-Cache": cacheState,
         "X-Feed-Cache-Age": String(payload.meta.cacheAgeSec ?? 0),
       },

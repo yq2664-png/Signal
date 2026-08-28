@@ -52,3 +52,7 @@ create policy "saves_update_own" on public.saves
   for update using (auth.uid() = user_id);
 create policy "saves_delete_own" on public.saves
   for delete using (auth.uid() = user_id);
+
+grant usage on schema public to anon, authenticated;
+grant select, insert, update, delete on table public.likes to authenticated;
+grant select, insert, update, delete on table public.saves to authenticated;

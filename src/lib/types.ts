@@ -296,6 +296,8 @@ export interface ResearchPaper {
 export interface ResearchPaperFeedMeta {
   arxivId: string;
   relevanceCue?: ResearchPaperRelevanceCue;
+  venue?: string;
+  categories?: string[];
 }
 
 export interface ResearchPaperCandidateDiagnostic {

@@ -165,7 +165,7 @@ const BoardCard = memo(function BoardCard({
       >
         <SourceLogo source={item.source} size={14} />
         <span className="min-w-0 flex-1 truncate text-[11px] text-[var(--text-muted)]">
-          {item.source}
+          {paperHeaderLabel(item)}
         </span>
         <button
           type="button"
@@ -423,6 +423,27 @@ function YouTubeCard({
   );
 }
 
+function paperFieldChips(item: FeedItem): string[] {
+  const paper = item.researchPaper;
+  const venue = paper?.venue?.trim();
+  const fromMeta = paper?.categories?.filter(Boolean) ?? [];
+  const fromTags = (item.tags ?? []).filter((tag) => /^cs\.[A-Z]{2,}$/i.test(tag));
+  const categories = fromMeta.length > 0 ? fromMeta : fromTags;
+  const cue = paper?.relevanceCue || item.native?.subtitle;
+  return [venue, ...categories.slice(0, 2), cue].filter(
+    (value, index, list): value is string =>
+      Boolean(value) && list.indexOf(value) === index
+  );
+}
+
+function paperHeaderLabel(item: FeedItem): string {
+  if (!item.researchPaper) return item.source;
+  const chips = paperFieldChips(item);
+  if (chips.length > 0) return chips.slice(0, 2).join(" · ");
+  if (item.researchPaper.arxivId) return "arXiv";
+  return "Research";
+}
+
 function PaperCard({
   item,
   accent,
@@ -430,7 +451,8 @@ function PaperCard({
   item: FeedItem;
   accent: string;
 }) {
-  const category = item.native?.subtitle || "cs.AI";
+  const chips = paperFieldChips(item);
+  const label = chips[0] || "Paper";
   return (
     <div>
       <SafeImage
@@ -445,12 +467,24 @@ function PaperCard({
         {item.summary}
       </p>
       <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[10px] text-[var(--text-muted)]">
-        <span
-          className="rounded-[4px] px-1.5 py-0.5 font-medium"
-          style={{ background: `${accent}22`, color: accent }}
-        >
-          {category}
-        </span>
+        {chips.length > 0 ? (
+          chips.map((chip) => (
+            <span
+              key={chip}
+              className="rounded-[4px] px-1.5 py-0.5 font-medium"
+              style={{ background: `${accent}22`, color: accent }}
+            >
+              {chip}
+            </span>
+          ))
+        ) : (
+          <span
+            className="rounded-[4px] px-1.5 py-0.5 font-medium"
+            style={{ background: `${accent}22`, color: accent }}
+          >
+            {label}
+          </span>
+        )}
         {item.native?.authorName ? (
           <span>{item.native.authorName.split(",")[0]}</span>
         ) : null}

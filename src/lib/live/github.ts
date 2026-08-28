@@ -1,5 +1,6 @@
 import type { FeedItem, Source } from "@/lib/types";
 import { rewriteFeedTitle } from "@/lib/live/headlines";
+import { liveFetchOptions } from "@/lib/live/live-fetch";
 import { slugId, toFeedItem } from "@/lib/live/normalize";
 
 type GhRepo = {
@@ -65,7 +66,7 @@ async function searchRepos(
 
   const res = await fetch(url.toString(), {
     headers: authHeaders(),
-    next: { revalidate: 900 },
+    ...liveFetchOptions(900),
     signal: AbortSignal.timeout(20000),
   });
 

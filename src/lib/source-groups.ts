@@ -34,8 +34,8 @@ export const sourceGroups: SourceGroup[] = [
   {
     id: "research",
     label: "Research Paper",
-    description: "Papers and research hubs",
-    sources: ["arXiv", "Hugging Face"],
+    description: "HF Daily Papers plus trusted venues, canonicalized when they have an arXiv id",
+    sources: ["arXiv"],
   },
   {
     id: "community",
@@ -47,6 +47,7 @@ export const sourceGroups: SourceGroup[] = [
       "GitHub · Articles",
       "GitHub · Skills",
       "GitHub · Projects",
+      "Hugging Face",
       "X (Twitter)",
       "YouTube",
       "Foreign Media",
@@ -64,4 +65,16 @@ export function groupIdForSource(source: Source): SourceGroupId {
     if (group.sources.includes(source)) return group.id;
   }
   return "community";
+}
+
+/** Chip grouping: papers and launches follow pipeline identity, not the host domain. */
+export function groupIdForItem(item: {
+  source: Source;
+  category?: string;
+  officialLaunch?: unknown;
+  researchPaper?: unknown;
+}): SourceGroupId {
+  if (item.researchPaper || item.category === "Research Papers") return "research";
+  if (item.officialLaunch) return "labs";
+  return groupIdForSource(item.source);
 }

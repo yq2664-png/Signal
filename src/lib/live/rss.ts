@@ -2,6 +2,7 @@ import Parser from "rss-parser";
 import type { Category, FeedItem, Source } from "@/lib/types";
 import { fetchXinZhiYuan } from "@/lib/live/chinese-media";
 import { rewriteFeedTitle } from "@/lib/live/headlines";
+import { liveFetchOptions } from "@/lib/live/live-fetch";
 import { looksAiRelated, slugId, stripHtml, toFeedItem } from "@/lib/live/normalize";
 import { enrichOgImages } from "@/lib/live/og-image";
 import { looksLikeModelRelease } from "@/lib/utils";
@@ -275,7 +276,7 @@ export async function fetchRssFeed(config: RssSourceConfig): Promise<FeedItem[]>
         Accept:
           "application/rss+xml, application/atom+xml, application/xml, text/xml",
       },
-      next: { revalidate: 900 },
+      ...liveFetchOptions(900),
       signal: AbortSignal.timeout(15000),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);

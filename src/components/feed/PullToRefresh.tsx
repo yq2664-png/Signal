@@ -10,9 +10,7 @@ import {
 import { RefreshCw } from "lucide-react";
 
 const PULL_THRESHOLD = 72;
-const WHEEL_THRESHOLD = 140;
-
-type Edge = "top" | "bottom" | null;
+const WHEEL_THRESHOLD = 240;
 
 export function PullToRefresh({
   onRefresh,
@@ -27,9 +25,7 @@ export function PullToRefresh({
 }) {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const [pull, setPull] = useState(0);
-  const [edge, setEdge] = useState<Edge>(null);
   const pullRef = useRef(0);
-  const edgeRef = useRef<Edge>(null);
   const startY = useRef(0);
   const wheelAcc = useRef(0);
   const wheelTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -41,19 +37,15 @@ export function PullToRefresh({
     if (!refreshing) locked.current = false;
   }, [refreshing]);
 
-  const setPullState = useCallback((value: number, nextEdge: Edge) => {
+  const setPullDistance = useCallback((value: number) => {
     pullRef.current = value;
-    edgeRef.current = nextEdge;
     setPull(value);
-    setEdge(nextEdge);
   }, []);
 
   const reset = useCallback(() => {
     pullRef.current = 0;
-    edgeRef.current = null;
     wheelAcc.current = 0;
     setPull(0);
-    setEdge(null);
   }, []);
 
   const trigger = useCallback(() => {
@@ -68,8 +60,6 @@ export function PullToRefresh({
     if (!el) return;
 
     const atTop = () => el.scrollTop <= 1;
-    const atBottom = () =>
-      el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
 
     const onTouchStart = (e: TouchEvent) => {
       if (refreshingRef.current || locked.current) return;
@@ -84,10 +74,7 @@ export function PullToRefresh({
 
       if (atTop() && dy > 0) {
         e.preventDefault();
-        setPullState(Math.min(dy * 0.45, PULL_THRESHOLD * 1.4), "top");
-      } else if (atBottom() && dy < 0) {
-        e.preventDefault();
-        setPullState(Math.min(-dy * 0.45, PULL_THRESHOLD * 1.4), "bottom");
+        setPullDistance(Math.min(dy * 0.45, PULL_THRESHOLD * 1.4));
       } else if (pullRef.current > 0) {
         reset();
       }
@@ -100,25 +87,19 @@ export function PullToRefresh({
 
     const onWheel = (e: WheelEvent) => {
       if (refreshingRef.current || locked.current) return;
-
-      if (atTop() && e.deltaY < 0) {
-        wheelAcc.current += -e.deltaY;
-        setPullState(
-          Math.min(wheelAcc.current * 0.35, PULL_THRESHOLD * 1.4),
-          "top"
-        );
-        if (wheelAcc.current >= WHEEL_THRESHOLD) trigger();
-      } else if (atBottom() && e.deltaY > 0) {
-        wheelAcc.current += e.deltaY;
-        setPullState(
-          Math.min(wheelAcc.current * 0.35, PULL_THRESHOLD * 1.4),
-          "bottom"
-        );
-        if (wheelAcc.current >= WHEEL_THRESHOLD) trigger();
-      } else if (pullRef.current > 0) {
-        wheelAcc.current = 0;
-        reset();
+      if (!atTop() || e.deltaY >= 0) {
+        if (pullRef.current > 0) {
+          wheelAcc.current = 0;
+          reset();
+        }
+        return;
       }
+
+      wheelAcc.current += -e.deltaY;
+      setPullDistance(
+        Math.min(wheelAcc.current * 0.28, PULL_THRESHOLD * 1.4)
+      );
+      if (wheelAcc.current >= WHEEL_THRESHOLD) trigger();
 
       if (wheelTimer.current) clearTimeout(wheelTimer.current);
       wheelTimer.current = setTimeout(() => {
@@ -138,26 +119,18 @@ export function PullToRefresh({
       el.removeEventListener("wheel", onWheel);
       if (wheelTimer.current) clearTimeout(wheelTimer.current);
     };
-  }, [reset, setPullState, trigger]);
+  }, [reset, setPullDistance, trigger]);
 
   const show = refreshing || pull > 8;
   const ready = pull >= PULL_THRESHOLD;
-  const indicatorOffset = Math.min(pull, PULL_THRESHOLD);
+  const indicatorOffset = refreshing ? 28 : Math.min(pull, PULL_THRESHOLD);
 
   return (
     <div className={className} style={{ position: "relative" }}>
       <RefreshHint
-        visible={show && (edge === "top" || refreshing)}
-        position="top"
-        offset={refreshing ? 28 : indicatorOffset}
-        spinning={refreshing}
-        ready={ready}
-      />
-      <RefreshHint
-        visible={show && edge === "bottom" && !refreshing}
-        position="bottom"
+        visible={show}
         offset={indicatorOffset}
-        spinning={false}
+        spinning={refreshing}
         ready={ready}
       />
       <div
@@ -166,11 +139,7 @@ export function PullToRefresh({
         style={{
           overscrollBehavior: "contain",
           transform:
-            edge === "top" && pull > 0
-              ? `translateY(${Math.min(pull * 0.25, 18)}px)`
-              : edge === "bottom" && pull > 0
-                ? `translateY(-${Math.min(pull * 0.25, 18)}px)`
-                : undefined,
+            pull > 0 ? `translateY(${Math.min(pull * 0.25, 18)}px)` : undefined,
           transition:
             pull === 0
               ? "transform 0.16s cubic-bezier(0.25, 0.46, 0.45, 0.94)"
@@ -183,9 +152,7 @@ export function PullToRefresh({
             className={`h-3 w-3 ${refreshing ? "animate-spin" : ""}`}
             strokeWidth={1.75}
           />
-          {refreshing
-            ? "Refreshing…"
-            : "Pull down at top · keep scrolling at bottom to refresh"}
+          {refreshing ? "Refreshing…" : "Pull down from the top to refresh"}
         </div>
       </div>
     </div>
@@ -194,13 +161,11 @@ export function PullToRefresh({
 
 function RefreshHint({
   visible,
-  position,
   offset,
   spinning,
   ready,
 }: {
   visible: boolean;
-  position: "top" | "bottom";
   offset: number;
   spinning: boolean;
   ready: boolean;
@@ -210,11 +175,11 @@ function RefreshHint({
     <div
       className="pointer-events-none absolute left-1/2 z-30 flex -translate-x-1/2 items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] text-[var(--text-secondary)]"
       style={{
-        [position]: Math.max(8, offset - 8),
+        top: Math.max(8, offset - 8),
         background: "rgba(15,16,17,0.85)",
         boxShadow: "0 0 0 1px rgba(255,255,255,0.08) inset",
         backdropFilter: "blur(12px)",
-        opacity: Math.min(1, offset / 40),
+        opacity: spinning ? 1 : Math.min(1, offset / 40),
         transition: spinning
           ? undefined
           : "opacity 0.1s cubic-bezier(0.25, 0.46, 0.45, 0.94)",

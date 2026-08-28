@@ -1,6 +1,6 @@
 import { mkdir, readFile, rename, writeFile } from "fs/promises";
 import path from "path";
-import type { FeedPayload } from "@/lib/live/aggregate";
+import type { FeedPayload, FeedRefreshContext } from "@/lib/live/aggregate";
 import { getCacheDir } from "@/lib/live/cache-dir";
 import { publicReadUrl } from "@/lib/live/public-read-url";
 
@@ -27,8 +27,11 @@ type MemoryEntry = {
   payload: FeedPayload;
 };
 
+export type FetchFresh = (ctx?: FeedRefreshContext) => Promise<FeedPayload>;
+
 let memory: MemoryEntry | null = null;
-let inflight: Promise<FeedPayload> | null = null;
+let inflightFull: Promise<FeedPayload> | null = null;
+let inflightFast: Promise<FeedPayload> | null = null;
 
 async function loadDisk(): Promise<MemoryEntry | null> {
   try {
@@ -82,6 +85,7 @@ function withCacheMeta(
       fetchedAt: new Date(fetchedAtMs).toISOString(),
       fromCache,
       warming: false,
+      pendingRefresh: false,
       cacheAgeSec: Math.round(ageMs / 1000),
       ttlSec: Math.round(FEED_TTL_MS / 1000),
     },
@@ -100,6 +104,7 @@ function warmingPayload(): FeedPayload {
       errors: ["Feed snapshot is rebuilding"],
       fromCache: false,
       warming: true,
+      pendingRefresh: false,
       cacheAgeSec: 0,
       ttlSec: Math.round(FEED_TTL_MS / 1000),
     },
@@ -121,33 +126,65 @@ async function waitFor<T>(
   }
 }
 
-async function runFetch(
-  fetchFresh: () => Promise<FeedPayload>
-): Promise<FeedPayload> {
-  if (inflight) return inflight;
+function slotPromise(slot: "full" | "fast"): Promise<FeedPayload> | null {
+  return slot === "fast" ? inflightFast : inflightFull;
+}
 
-  inflight = (async () => {
+function setSlot(
+  slot: "full" | "fast",
+  promise: Promise<FeedPayload> | null
+): void {
+  if (slot === "fast") inflightFast = promise;
+  else inflightFull = promise;
+}
+
+async function runFetch(
+  fetchFresh: () => Promise<FeedPayload>,
+  slot: "full" | "fast"
+): Promise<FeedPayload> {
+  const current = slotPromise(slot);
+  if (current) return current;
+
+  const started = (async () => {
+    const startedAt = Date.now();
     const payload = await fetchFresh();
-    const entry: MemoryEntry = {
-      fetchedAtMs: Date.now(),
-      payload,
-    };
+    // A later pull-to-refresh can finish while this crawl is still running.
+    if (memory && memory.fetchedAtMs > startedAt) {
+      return withCacheMeta(memory.payload, memory.fetchedAtMs, false);
+    }
+    const fetchedAtMs = Date.now();
+    const entry: MemoryEntry = { fetchedAtMs, payload };
     memory = entry;
     await saveDisk(entry).catch((err) => {
       console.error("[feed-cache] failed to persist snapshot", err);
     });
     return withCacheMeta(payload, entry.fetchedAtMs, false);
   })().finally(() => {
-    inflight = null;
+    setSlot(slot, null);
   });
 
-  return inflight;
+  setSlot(slot, started);
+  return started;
 }
 
-function kickRefresh(fetchFresh: () => Promise<FeedPayload>): void {
-  void runFetch(fetchFresh).catch((err) => {
+function kickRefresh(
+  fetchFresh: () => Promise<FeedPayload>,
+  slot: "full" | "fast"
+): void {
+  void runFetch(fetchFresh, slot).catch((err) => {
     console.error("[feed-cache] refresh failed", err);
   });
+}
+
+function pendingPayload(entry: MemoryEntry): FeedPayload {
+  const cached = withCacheMeta(entry.payload, entry.fetchedAtMs, true);
+  return {
+    ...cached,
+    meta: {
+      ...cached.meta,
+      pendingRefresh: true,
+    },
+  };
 }
 
 /**
@@ -155,10 +192,11 @@ function kickRefresh(fetchFresh: () => Promise<FeedPayload>): void {
  * - Snapshot available: return immediately (refresh in background if stale/forced)
  * - No snapshot: start crawl, wait briefly, then return a 200 warming payload
  *
+ * Pull-to-refresh uses a fast slot that recrawls RSS/X/GitHub/YouTube only.
  * Never block the HTTP request on a full live aggregate — that 502s Railway.
  */
 export async function getCachedFeed(
-  fetchFresh: () => Promise<FeedPayload>,
+  fetchFresh: FetchFresh,
   opts?: { force?: boolean }
 ): Promise<FeedPayload> {
   const force = Boolean(opts?.force);
@@ -168,15 +206,25 @@ export async function getCachedFeed(
     memory = await loadDisk();
   }
 
+  if (force && memory) {
+    kickRefresh(
+      () => fetchFresh({ mode: "fast", existing: memory!.payload }),
+      "fast"
+    );
+    return pendingPayload(memory);
+  }
+
   const stale = memory ? now - memory.fetchedAtMs >= FEED_TTL_MS : true;
-  if (force || !memory || stale) {
-    kickRefresh(fetchFresh);
+  if (!memory || stale) {
+    kickRefresh(() => fetchFresh(), "full");
   }
 
   if (memory) {
+    if (inflightFast || inflightFull) return pendingPayload(memory);
     return withCacheMeta(memory.payload, memory.fetchedAtMs, true);
   }
 
+  const inflight = inflightFull ?? inflightFast;
   if (inflight) {
     try {
       const done = await waitFor(inflight, FEED_REQUEST_WAIT_MS);
@@ -191,5 +239,6 @@ export async function getCachedFeed(
 
 export function resetFeedCacheForTests(): void {
   memory = null;
-  inflight = null;
+  inflightFull = null;
+  inflightFast = null;
 }

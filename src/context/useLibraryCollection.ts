@@ -12,6 +12,29 @@ import { prefsFromItems } from "@/lib/personalization";
 import { createClient } from "@/lib/supabase/client";
 import type { FeedItem } from "@/lib/types";
 
+function libraryErrorMessage(err: unknown, fallback: string): string {
+  const raw =
+    err && typeof err === "object" && "message" in err
+      ? String((err as { message?: unknown }).message ?? "")
+      : err instanceof Error
+        ? err.message
+        : "";
+  const code =
+    err && typeof err === "object" && "code" in err
+      ? String((err as { code?: unknown }).code ?? "")
+      : "";
+  if (
+    code === "42501" ||
+    /permission denied|row-level security/i.test(raw)
+  ) {
+    return "Liked/Saved isn’t writable yet. Run the likes and saves grants in Supabase.";
+  }
+  if (/sign-in expired/i.test(raw)) {
+    return raw;
+  }
+  return fallback;
+}
+
 export function useLibraryCollection(
   kind: LibraryKind,
   copy: {
@@ -109,7 +132,7 @@ export function useLibraryCollection(
         })
         .catch(async (err) => {
           console.error(err);
-          toast(copy.failed, "error");
+          toast(libraryErrorMessage(err, copy.failed), "error");
           await load();
         })
         .finally(() => {

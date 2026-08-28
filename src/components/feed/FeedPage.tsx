@@ -8,10 +8,10 @@ import { SourceBoard, SourceGroupChips } from "@/components/feed/SourceBoard";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/Button";
 import { useFeed } from "@/context/FeedContext";
-import { groupIdForSource, type SourceGroupId } from "@/lib/source-groups";
+import { groupIdForItem, type SourceGroupId } from "@/lib/source-groups";
 
 export function FeedPage() {
-  const { items, loading, error, meta, refresh } = useFeed();
+  const { items, loading, refreshing, error, meta, forceRefresh } = useFeed();
   const [filters, setFilters] = useState<FeedFiltersState>(defaultFilters);
   const [groupFilter, setGroupFilter] = useState<SourceGroupId | "all">("all");
   const [toolsOpen, setToolsOpen] = useState(false);
@@ -41,7 +41,7 @@ export function FeedPage() {
   const filtered = useMemo(() => {
     if (groupFilter === "all") return searched;
     return searched.filter(
-      (item) => groupIdForSource(item.source) === groupFilter
+      (item) => groupIdForItem(item) === groupFilter
     );
   }, [groupFilter, searched]);
 
@@ -59,7 +59,7 @@ export function FeedPage() {
       community: 0,
     };
     for (const item of searched) {
-      base[groupIdForSource(item.source)] += 1;
+      base[groupIdForItem(item)] += 1;
     }
     return base;
   }, [searched]);
@@ -110,8 +110,8 @@ export function FeedPage() {
             items={filtered}
             selectedId={selected?.id}
             onSelect={openBrief}
-            onRefresh={refresh}
-            refreshing={loading || Boolean(meta?.warming)}
+            onRefresh={forceRefresh}
+            refreshing={refreshing}
             emptyMessage={
               loading
                 ? "Loading…"
