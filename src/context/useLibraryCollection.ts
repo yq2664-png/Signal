@@ -89,7 +89,14 @@ export function useLibraryCollection(
       const supabase = createClient();
       void toggleLibraryItem(supabase, kind, userId, item)
         .then(async ({ active, items: next }) => {
-          setItems(next);
+          setItems((prev) => {
+            const hasItem = next.some((row) => row.id === item.id);
+            if (active && !hasItem) return prev;
+            if (!active && hasItem) {
+              return next.filter((row) => row.id !== item.id);
+            }
+            return next;
+          });
           toast(active ? copy.added : copy.removed, "success");
           const other = await fetchLibrary(
             supabase,

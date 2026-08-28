@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import { FeedFilters, defaultFilters, type FeedFiltersState } from "@/components/feed/FeedFilters";
 import { ImpactBriefDrawer } from "@/components/feed/ImpactBriefDrawer";
@@ -17,6 +17,11 @@ export function FeedPage() {
   const [toolsOpen, setToolsOpen] = useState(false);
   const [selectedId, setSelectedId] = useState("");
   const [briefOpen, setBriefOpen] = useState(false);
+
+  const openBrief = useCallback((id: string) => {
+    setSelectedId(id);
+    setBriefOpen(true);
+  }, []);
 
   useEffect(() => {
     if (!selectedId && items[0]) setSelectedId(items[0].id);
@@ -104,10 +109,7 @@ export function FeedPage() {
           <SourceBoard
             items={filtered}
             selectedId={selected?.id}
-            onSelect={(id) => {
-              setSelectedId(id);
-              setBriefOpen(true);
-            }}
+            onSelect={openBrief}
             onRefresh={refresh}
             refreshing={loading || Boolean(meta?.warming)}
             emptyMessage={

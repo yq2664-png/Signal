@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ImpactBriefDrawer } from "@/components/feed/ImpactBriefDrawer";
 import { SourceBoard } from "@/components/feed/SourceBoard";
 import { AppShell } from "@/components/layout/AppShell";
@@ -25,6 +25,11 @@ export function SavedBoardPage({
   const { items: liveItems } = useFeed();
   const [selectedId, setSelectedId] = useState("");
   const [briefOpen, setBriefOpen] = useState(false);
+
+  const openBrief = useCallback((id: string) => {
+    setSelectedId(id);
+    setBriefOpen(true);
+  }, []);
 
   const resolved = useMemo(() => {
     const liveById = new Map(liveItems.map((item) => [item.id, item]));
@@ -62,10 +67,7 @@ export function SavedBoardPage({
           <SourceBoard
             items={resolved}
             selectedId={selected?.id}
-            onSelect={(id) => {
-              setSelectedId(id);
-              setBriefOpen(true);
-            }}
+            onSelect={openBrief}
             emptyMessage={ready ? emptyMessage : "Loading…"}
           />
         </div>

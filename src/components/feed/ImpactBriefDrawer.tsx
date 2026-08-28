@@ -263,7 +263,11 @@ export function ImpactBriefDrawer({
         type="button"
         aria-label="Close brief backdrop"
         className="pointer-events-auto absolute inset-0 bg-black/40 lg:bg-black/25"
-        onClick={onClose}
+        onPointerDown={(event) => {
+          if (event.button !== 0) return;
+          event.preventDefault();
+          onClose();
+        }}
       />
       <aside
         className="pointer-events-auto absolute top-0 bottom-0 z-20 flex flex-col bg-[var(--bg-elevated)]"

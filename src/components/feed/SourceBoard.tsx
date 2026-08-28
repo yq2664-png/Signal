@@ -1,6 +1,7 @@
 "use client";
 
 import { clsx } from "clsx";
+import { memo } from "react";
 import { Bookmark, Heart } from "lucide-react";
 import { SafeImage } from "@/components/feed/SafeImage";
 import { SourceLogo } from "@/components/feed/SourceLogo";
@@ -72,13 +73,15 @@ export function SourceBoard({
   refreshing?: boolean;
   emptyMessage?: string;
 }) {
+  const { isLiked, toggleLike, getLikes } = useLikes();
+  const { isBookmarked, toggleBookmark } = useBookmarks();
   const board =
     items.length === 0 ? (
       <div className="flex min-h-full items-center justify-center p-8">
         <p className="text-[13px] text-[var(--text-muted)]">{emptyMessage}</p>
       </div>
     ) : (
-      <div className="relative min-h-full bg-[var(--bg)]">
+      <div className="relative min-h-full bg-[var(--bg)]" style={{ overflowAnchor: "none" }}>
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0"
@@ -94,7 +97,12 @@ export function SourceBoard({
                 key={item.id}
                 item={item}
                 selected={selectedId === item.id}
-                onSelect={() => onSelect(item.id)}
+                liked={isLiked(item.id)}
+                saved={isBookmarked(item.id)}
+                likeCount={getLikes(item.id)}
+                onSelect={onSelect}
+                onToggleLike={toggleLike}
+                onToggleSave={toggleBookmark}
               />
             ))}
           </div>
@@ -117,22 +125,27 @@ export function SourceBoard({
   );
 }
 
-function BoardCard({
+const BoardCard = memo(function BoardCard({
   item,
   selected,
+  liked,
+  saved,
+  likeCount,
   onSelect,
+  onToggleLike,
+  onToggleSave,
 }: {
   item: FeedItem;
   selected: boolean;
-  onSelect: () => void;
+  liked: boolean;
+  saved: boolean;
+  likeCount: number;
+  onSelect: (id: string) => void;
+  onToggleLike: (item: FeedItem) => void;
+  onToggleSave: (item: FeedItem) => void;
 }) {
   const chrome = sourceChrome[item.source];
   const kind = chrome.kind;
-  const { isLiked, toggleLike, getLikes } = useLikes();
-  const { isBookmarked, toggleBookmark } = useBookmarks();
-  const liked = isLiked(item.id);
-  const saved = isBookmarked(item.id);
-  const likeCount = getLikes(item.id);
 
   return (
     <article
@@ -143,6 +156,7 @@ function BoardCard({
       style={{
         transitionTimingFunction: "cubic-bezier(0.25, 0.46, 0.45, 0.94)",
         boxShadow: selected ? `inset 3px 0 0 ${chrome.accent}` : undefined,
+        overflowAnchor: "none",
       }}
     >
       <header
@@ -157,9 +171,11 @@ function BoardCard({
           type="button"
           aria-label={liked ? "Unlike" : "Like"}
           aria-pressed={liked}
+          onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => {
+            e.preventDefault();
             e.stopPropagation();
-            toggleLike(item);
+            onToggleLike(item);
           }}
           className={clsx(
             "inline-flex items-center gap-1 rounded-[6px] px-1.5 py-1 text-[11px] transition-colors duration-100",
@@ -176,17 +192,24 @@ function BoardCard({
             strokeWidth={1.75}
             fill={liked ? "currentColor" : "none"}
           />
-          {likeCount > 0 ? (
-            <span className="mono tabular-nums">{likeCount}</span>
-          ) : null}
+          <span
+            className={clsx(
+              "mono tabular-nums",
+              likeCount > 0 ? "" : "invisible"
+            )}
+          >
+            {likeCount > 0 ? likeCount : "0"}
+          </span>
         </button>
         <button
           type="button"
           aria-label={saved ? "Unsave" : "Save"}
           aria-pressed={saved}
+          onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => {
+            e.preventDefault();
             e.stopPropagation();
-            toggleBookmark(item);
+            onToggleSave(item);
           }}
           className={clsx(
             "inline-flex items-center rounded-[6px] px-1.5 py-1 text-[11px] transition-colors duration-100",
@@ -209,11 +232,11 @@ function BoardCard({
       <div
         role="button"
         tabIndex={0}
-        onClick={onSelect}
+        onClick={() => onSelect(item.id)}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
-            onSelect();
+            onSelect(item.id);
           }
         }}
         className="w-full cursor-pointer px-3.5 pt-1 pb-3 text-left"
@@ -236,7 +259,7 @@ function BoardCard({
       </div>
     </article>
   );
-}
+});
 
 function formatCount(n?: number): string {
   if (n == null) return "0";

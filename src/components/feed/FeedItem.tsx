@@ -135,7 +135,12 @@ export function ImpactBriefPanel({
           <Button
             variant="subtle"
             aria-pressed={liked}
-            onClick={() => toggleLike(item)}
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              toggleLike(item);
+            }}
           >
             <Heart
               className="h-3.5 w-3.5"
@@ -147,7 +152,12 @@ export function ImpactBriefPanel({
           <Button
             variant="subtle"
             aria-pressed={saved}
-            onClick={() => toggleBookmark(item)}
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              toggleBookmark(item);
+            }}
           >
             <Bookmark
               className="h-3.5 w-3.5"

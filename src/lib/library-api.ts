@@ -50,13 +50,36 @@ export async function toggleLibraryItem(
     const { error } = await supabase.from(table(kind)).upsert({
       user_id: userId,
       item_id: item.id,
-      item_json: JSON.parse(JSON.stringify(item)) as FeedItem,
+      item_json: toLibraryRecord(item),
     });
     if (error) throw error;
   }
 
   const items = await fetchLibrary(supabase, kind);
   return { active: !existing, items };
+}
+
+function toLibraryRecord(item: FeedItem): FeedItem {
+  return {
+    id: item.id,
+    title: item.title,
+    source: item.source,
+    publishedAt: item.publishedAt,
+    category: item.category,
+    summary: item.summary,
+    scores: item.scores,
+    tier: item.tier,
+    tags: item.tags,
+    url: item.url,
+    brief: item.brief,
+    readingTimeMin: item.readingTimeMin,
+    imageUrl: item.imageUrl,
+    avatarUrl: item.avatarUrl,
+    native: item.native,
+    valueCue: item.valueCue,
+    officialLaunch: item.officialLaunch,
+    researchPaper: item.researchPaper,
+  };
 }
 
 export async function loadUserPrefs(
