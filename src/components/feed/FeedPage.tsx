@@ -8,35 +8,52 @@ import { SourceBoard, SourceGroupChips } from "@/components/feed/SourceBoard";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/Button";
 import { useFeed } from "@/context/FeedContext";
+import { useSeenPosts } from "@/context/useSeenPosts";
 import { groupIdForItem, type SourceGroupId } from "@/lib/source-groups";
 
 export function FeedPage() {
   const { items, loading, refreshing, error, meta, forceRefresh } = useFeed();
+  const { markSeen, commitSeen, hideSeen, ready } = useSeenPosts();
   const [filters, setFilters] = useState<FeedFiltersState>(defaultFilters);
   const [groupFilter, setGroupFilter] = useState<SourceGroupId | "all">("all");
   const [toolsOpen, setToolsOpen] = useState(false);
   const [selectedId, setSelectedId] = useState("");
   const [briefOpen, setBriefOpen] = useState(false);
 
-  const openBrief = useCallback((id: string) => {
-    setSelectedId(id);
-    setBriefOpen(true);
-  }, []);
+  const pool = useMemo(
+    () => (ready ? hideSeen(items) : []),
+    [hideSeen, items, ready]
+  );
+
+  const openBrief = useCallback(
+    (id: string) => {
+      const item = items.find((entry) => entry.id === id);
+      if (item) markSeen(item);
+      setSelectedId(id);
+      setBriefOpen(true);
+    },
+    [items, markSeen]
+  );
+
+  const onRefresh = useCallback(() => {
+    commitSeen();
+    forceRefresh();
+  }, [commitSeen, forceRefresh]);
 
   useEffect(() => {
-    if (!selectedId && items[0]) setSelectedId(items[0].id);
-  }, [items, selectedId]);
+    if (!selectedId && pool[0]) setSelectedId(pool[0].id);
+  }, [pool, selectedId]);
 
   const searched = useMemo(() => {
     const q = filters.query.trim().toLowerCase();
-    if (!q) return items;
-    return items.filter((item) => {
+    if (!q) return pool;
+    return pool.filter((item) => {
       const hay = [item.title, item.summary, item.source]
         .join(" ")
         .toLowerCase();
       return hay.includes(q);
     });
-  }, [filters.query, items]);
+  }, [filters.query, pool]);
 
   const filtered = useMemo(() => {
     if (groupFilter === "all") return searched;
@@ -110,14 +127,17 @@ export function FeedPage() {
             items={filtered}
             selectedId={selected?.id}
             onSelect={openBrief}
-            onRefresh={forceRefresh}
+            onRefresh={onRefresh}
             refreshing={refreshing}
+            loading={
+              !ready ||
+              loading ||
+              Boolean(meta?.warming && filtered.length === 0)
+            }
             emptyMessage={
-              loading
-                ? "Loading…"
-                : meta?.warming
-                  ? "Building the live feed…"
-                  : "No updates match these filters."
+              meta?.warming
+                ? "Building the live feed…"
+                : "No updates match these filters."
             }
           />
         </div>

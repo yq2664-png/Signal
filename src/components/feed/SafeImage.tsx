@@ -1,8 +1,12 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { clsx } from "clsx";
+import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 
-/** Renders an image; if it fails to load, renders nothing (no empty placeholder). */
+/**
+ * Keeps the media slot while the image loads. Hides the slot only when there
+ * is no src or the image fails — so waterfall columns do not collapse empty.
+ */
 export function SafeImage({
   src,
   alt = "",
@@ -17,26 +21,42 @@ export function SafeImage({
   wrapperClassName?: string;
   children?: ReactNode;
 }) {
+  const imgRef = useRef<HTMLImageElement>(null);
   const [failed, setFailed] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  useLayoutEffect(() => {
+    setFailed(false);
+    setLoaded(false);
+    const node = imgRef.current;
+    if (!node?.complete) return;
+    if (node.naturalWidth > 0) setLoaded(true);
+    else setFailed(true);
+  }, [src]);
+
   if (!src || failed) return null;
 
-  const img = (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={src}
-      alt={alt}
-      className={className}
-      loading="lazy"
-      referrerPolicy="no-referrer"
-      onError={() => setFailed(true)}
-    />
-  );
-
-  if (!wrapperClassName && !children) return img;
-
   return (
-    <div className={wrapperClassName}>
-      {img}
+    <div
+      className={clsx(
+        "relative overflow-hidden bg-[var(--bg-overlay)]",
+        wrapperClassName ?? "inline-block"
+      )}
+    >
+      {!loaded ? (
+        <div className="media-skeleton pointer-events-none absolute inset-0" aria-hidden />
+      ) : null}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        ref={imgRef}
+        src={src}
+        alt={alt}
+        className={clsx(className, !loaded && "opacity-0")}
+        loading="lazy"
+        referrerPolicy="no-referrer"
+        onLoad={() => setLoaded(true)}
+        onError={() => setFailed(true)}
+      />
       {children}
     </div>
   );

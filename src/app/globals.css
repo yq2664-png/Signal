@@ -218,6 +218,26 @@ select {
   }
 }
 
+.media-skeleton {
+  background: var(--bg-overlay);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .media-skeleton {
+    animation: skeletonPulse 1.2s var(--ease) infinite;
+  }
+}
+
+@keyframes skeletonPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
 /* Scrollbars — terminal dense */
 ::-webkit-scrollbar {
   width: 8px;

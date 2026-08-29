@@ -165,6 +165,35 @@ describe("Moonshot AI / Kimi", () => {
         (record) => record.id
       )
     ).toEqual(first.map((record) => record.id));
+    expect(moonshot.channels.some((channel) => channel.url === "https://moonshot.ai/")).toBe(
+      true
+    );
+  });
+
+  it("reads homepage card dates and ignores CDN path dates", () => {
+    const channel = moonshot.channels.find(
+      (candidate) => candidate.channelId === "moonshot-home"
+    )!;
+    const html = [
+      "<html><body>",
+      '<a class="_card" href="https://www.kimi.ai/blog/kimi-k3">',
+      '<img src="https://kimi-file.kimi.ai/prod-chat-kimi/kfs/4/2/2026-07-31/cdn.png" alt="Kimi K3"/>',
+      '<span class="_cardDate_5tsj7_97">2026-07-16</span>',
+      "<h3>Kimi K3</h3></a>",
+      '<a href="/blog/kimi-k2-5" aria-label="Kimi K2.5" class="absolute inset-0"></a>',
+      '<img src="https://cdn.example/2026-02-13/k25.png" alt="Kimi K2.5"/>',
+      '<h4 class="card-title">Kimi K2.5</h4>',
+      '<p class="card-date">2026-01-27</p>',
+      '<a href="/blog/nav-only">Kimi K2 Thinking</a>',
+      "</body></html>",
+    ].join("");
+    const records = parseHtmlListChannel(html, moonshot, channel);
+    expect(
+      records.map((record) => [record.title, record.publishedAt.slice(0, 10)])
+    ).toEqual([
+      ["Kimi K3", "2026-07-16"],
+      ["Kimi K2.5", "2026-01-27"],
+    ]);
   });
 
   it("publishes Kimi K3 and rejects research-only / hiring posts", async () => {

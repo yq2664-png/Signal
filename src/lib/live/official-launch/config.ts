@@ -389,8 +389,9 @@ export const OFFICIAL_LAUNCH_ORGANIZATIONS: OfficialLaunchOrganizationConfig[] =
     ],
   },
   {
-    // Emerging: Kimi model launches. Official blog HTML is the first-party
-    // listing; GitHub Kimi-K2 releases.atom is isolated from legacy RSS.
+    // Emerging: Kimi model launches. Official homepage cards carry
+    // publish dates; the blog listing is the full catalog. GitHub atoms
+    // are isolated from this path.
     organizationId: "moonshot",
     displayName: "Kimi",
     aliases: ["Kimi", "Moonshot", "Moonshot AI"],
@@ -406,6 +407,16 @@ export const OFFICIAL_LAUNCH_ORGANIZATIONS: OfficialLaunchOrganizationConfig[] =
     ],
     publishThresholds: { qualification: 78, novelty: 68, impact: 68 },
     channels: [
+      {
+        channelId: "moonshot-home",
+        sourceType: "blog",
+        url: "https://moonshot.ai/",
+        adapter: "html-list",
+        authority: 96,
+        role: "primary",
+        limit: 8,
+        linkPattern: "/blog/",
+      },
       {
         channelId: "moonshot-blog",
         sourceType: "blog",

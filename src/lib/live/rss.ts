@@ -23,6 +23,13 @@ type RssItem = {
   "media:thumbnail"?: unknown;
 };
 
+function rssPublishedAt(item: RssItem): string | undefined {
+  const raw = item.isoDate || item.pubDate;
+  if (!raw) return undefined;
+  const date = new Date(raw);
+  return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
+}
+
 const parser = new Parser({
   timeout: 12000,
   headers: {
@@ -303,11 +310,8 @@ export async function fetchRssFeed(config: RssSourceConfig): Promise<FeedItem[]>
           stripHtml(item.content ?? "") ||
           feed.description ||
           item.title!;
-        const publishedAt = item.isoDate
-          ? new Date(item.isoDate).toISOString()
-          : item.pubDate
-            ? new Date(item.pubDate).toISOString()
-            : new Date().toISOString();
+        const publishedAt = rssPublishedAt(item);
+        if (!publishedAt) return null;
 
         const creator = item.creator || item["dc:creator"] || undefined;
         const categories = (item.categories ?? [])
@@ -350,7 +354,8 @@ export async function fetchRssFeed(config: RssSourceConfig): Promise<FeedItem[]>
             subtitle: categories[0] || config.source,
           },
         });
-      });
+      })
+      .filter((item): item is FeedItem => item !== null);
 
     if (config.fetchOg) {
       items = await enrichOgImages(items, limit);

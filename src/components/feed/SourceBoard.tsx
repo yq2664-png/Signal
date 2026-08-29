@@ -1,7 +1,7 @@
 "use client";
 
 import { clsx } from "clsx";
-import { memo } from "react";
+import { memo, type ReactNode } from "react";
 import { Bookmark, Heart } from "lucide-react";
 import { SafeImage } from "@/components/feed/SafeImage";
 import { SourceLogo } from "@/components/feed/SourceLogo";
@@ -64,6 +64,7 @@ export function SourceBoard({
   onSelect,
   onRefresh,
   refreshing = false,
+  loading = false,
   emptyMessage = "No updates in these sources.",
 }: {
   items: FeedItem[];
@@ -71,43 +72,38 @@ export function SourceBoard({
   onSelect: (id: string) => void;
   onRefresh?: () => void;
   refreshing?: boolean;
+  loading?: boolean;
   emptyMessage?: string;
 }) {
   const { isLiked, toggleLike, getLikes } = useLikes();
   const { isBookmarked, toggleBookmark } = useBookmarks();
   const board =
     items.length === 0 ? (
-      <div className="flex min-h-full items-center justify-center p-8">
-        <p className="text-[13px] text-[var(--text-muted)]">{emptyMessage}</p>
-      </div>
-    ) : (
-      <div className="relative min-h-full bg-[var(--bg)]" style={{ overflowAnchor: "none" }}>
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0"
-          style={{
-            background:
-              "radial-gradient(ellipse 70% 40% at 15% 0%, rgba(255,255,255,0.045), transparent 55%), radial-gradient(ellipse 50% 35% at 85% 20%, rgba(138,143,152,0.08), transparent 50%), radial-gradient(ellipse 60% 40% at 50% 100%, rgba(255,255,255,0.03), transparent 55%)",
-          }}
-        />
-        <div className="relative px-4 py-4 md:px-5">
-          <div className="columns-1 gap-4 sm:columns-2 xl:columns-3 2xl:columns-4">
-            {items.map((item) => (
-              <BoardCard
-                key={item.id}
-                item={item}
-                selected={selectedId === item.id}
-                liked={isLiked(item.id)}
-                saved={isBookmarked(item.id)}
-                likeCount={getLikes(item.id)}
-                onSelect={onSelect}
-                onToggleLike={toggleLike}
-                onToggleSave={toggleBookmark}
-              />
-            ))}
-          </div>
+      loading ? (
+        <BoardFrame busy>
+          <BoardSkeleton />
+        </BoardFrame>
+      ) : (
+        <div className="flex min-h-full items-center justify-center p-8">
+          <p className="text-[13px] text-[var(--text-muted)]">{emptyMessage}</p>
         </div>
-      </div>
+      )
+    ) : (
+      <BoardFrame>
+        {items.map((item) => (
+          <BoardCard
+            key={item.id}
+            item={item}
+            selected={selectedId === item.id}
+            liked={isLiked(item.id)}
+            saved={isBookmarked(item.id)}
+            likeCount={getLikes(item.id)}
+            onSelect={onSelect}
+            onToggleLike={toggleLike}
+            onToggleSave={toggleBookmark}
+          />
+        ))}
+      </BoardFrame>
     );
 
   if (!onRefresh) {
@@ -123,6 +119,89 @@ export function SourceBoard({
       {board}
     </PullToRefresh>
   );
+}
+
+function BoardFrame({
+  children,
+  busy = false,
+}: {
+  children: ReactNode;
+  busy?: boolean;
+}) {
+  return (
+    <div
+      className="relative min-h-full bg-[var(--bg)]"
+      style={{ overflowAnchor: "none" }}
+      aria-busy={busy || undefined}
+      aria-label={busy ? "Loading feed" : undefined}
+    >
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 70% 40% at 15% 0%, rgba(255,255,255,0.045), transparent 55%), radial-gradient(ellipse 50% 35% at 85% 20%, rgba(138,143,152,0.08), transparent 50%), radial-gradient(ellipse 60% 40% at 50% 100%, rgba(255,255,255,0.03), transparent 55%)",
+        }}
+      />
+      <div className="relative px-4 py-4 md:px-5">
+        <div className="columns-1 gap-4 sm:columns-2 xl:columns-3 2xl:columns-4">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const SKELETON_CARDS: Array<{ media: boolean; lines: number }> = [
+  { media: true, lines: 3 },
+  { media: false, lines: 2 },
+  { media: true, lines: 2 },
+  { media: true, lines: 3 },
+  { media: false, lines: 4 },
+  { media: true, lines: 2 },
+  { media: false, lines: 2 },
+  { media: true, lines: 3 },
+  { media: true, lines: 2 },
+  { media: false, lines: 3 },
+  { media: true, lines: 3 },
+  { media: false, lines: 2 },
+];
+
+function BoardSkeleton() {
+  return SKELETON_CARDS.map((card, index) => (
+    <article
+      key={index}
+      className="glass-card mb-4 break-inside-avoid overflow-hidden rounded-[12px]"
+    >
+      <header
+        className="flex items-center gap-2 px-3.5 pt-3 pb-1.5"
+        style={{ background: "rgba(255,255,255,0.02)" }}
+      >
+        <span className="media-skeleton h-[26px] w-[26px] shrink-0 rounded-[6px]" />
+        <span className="media-skeleton h-2.5 w-24 rounded-[4px]" />
+      </header>
+      <div className="px-3.5 pt-1 pb-3">
+        {card.media ? (
+          <div className="media-skeleton mb-2.5 aspect-[16/9] rounded-[8px]" />
+        ) : null}
+        <div className="space-y-2">
+          {Array.from({ length: card.lines }, (_, line) => (
+            <div
+              key={line}
+              className="media-skeleton h-2.5 rounded-[4px]"
+              style={{
+                width: line === card.lines - 1 ? "62%" : "100%",
+              }}
+            />
+          ))}
+        </div>
+        <div className="mt-2.5 flex gap-2">
+          <span className="media-skeleton h-4 w-10 rounded-[4px]" />
+          <span className="media-skeleton h-4 w-16 rounded-[4px]" />
+        </div>
+      </div>
+    </article>
+  ));
 }
 
 const BoardCard = memo(function BoardCard({
@@ -279,7 +358,8 @@ function TweetCard({ item }: { item: FeedItem }) {
     <div className="mb-0 flex items-start gap-2.5">
       <SafeImage
         src={item.avatarUrl}
-        className="mt-0.5 h-9 w-9 shrink-0 rounded-full object-cover"
+        className="h-full w-full object-cover"
+        wrapperClassName="mt-0.5 h-9 w-9 shrink-0 rounded-full"
       />
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-x-1.5 text-[13px]">
@@ -314,8 +394,8 @@ function NewsCard({
     <div>
       <SafeImage
         src={item.imageUrl}
-        className="aspect-[16/9] w-full object-cover"
-        wrapperClassName="mb-2.5 overflow-hidden rounded-[8px]"
+        className="h-full w-full object-cover"
+        wrapperClassName="mb-2.5 aspect-[16/9] overflow-hidden rounded-[8px]"
       />
       <h3 className="text-[14px] leading-5 font-semibold tracking-[-0.01em] text-[var(--text-primary)]">
         {item.title}
@@ -430,7 +510,8 @@ function paperFieldChips(item: FeedItem): string[] {
   const fromTags = (item.tags ?? []).filter((tag) => /^cs\.[A-Z]{2,}$/i.test(tag));
   const categories = fromMeta.length > 0 ? fromMeta : fromTags;
   const cue = paper?.relevanceCue || item.native?.subtitle;
-  return [venue, ...categories.slice(0, 2), cue].filter(
+  const implication = paper?.productImplication ? "Product" : undefined;
+  return [venue, ...categories.slice(0, 2), cue, implication].filter(
     (value, index, list): value is string =>
       Boolean(value) && list.indexOf(value) === index
   );
@@ -457,8 +538,8 @@ function PaperCard({
     <div>
       <SafeImage
         src={item.imageUrl}
-        className="aspect-[16/9] w-full object-cover"
-        wrapperClassName="mb-2 overflow-hidden rounded-[8px]"
+        className="h-full w-full object-cover"
+        wrapperClassName="mb-2 aspect-[16/9] overflow-hidden rounded-[8px]"
       />
       <h3 className="text-[13px] leading-5 font-semibold text-[var(--text-primary)]">
         {item.title}
@@ -541,7 +622,8 @@ function RepoCard({ item }: { item: FeedItem }) {
     <div className="flex gap-2.5">
       <SafeImage
         src={item.avatarUrl}
-        className="mt-0.5 h-8 w-8 shrink-0 rounded-[6px] object-cover"
+        className="h-full w-full object-cover"
+        wrapperClassName="mt-0.5 h-8 w-8 shrink-0 rounded-[6px]"
       />
       <div className="min-w-0 flex-1">
         <h3 className="text-[13px] leading-5 font-semibold tracking-[-0.01em] text-[var(--text-primary)]">

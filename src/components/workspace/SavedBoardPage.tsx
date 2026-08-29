@@ -68,7 +68,8 @@ export function SavedBoardPage({
             items={resolved}
             selectedId={selected?.id}
             onSelect={openBrief}
-            emptyMessage={ready ? emptyMessage : "Loading…"}
+            loading={!ready}
+            emptyMessage={emptyMessage}
           />
         </div>
         {selected && briefOpen ? (

@@ -156,7 +156,6 @@ describe("Meta AI", () => {
     const second = parseHtmlListChannel(fixtures.metaHtml, meta, channel);
     expect(first.map((record) => record.title)).toEqual([
       "Introducing Muse Spark 1.1",
-      "Reimagining Independence: How Meta’s AI Models Are Helping the University of Pittsburgh Transform Assistive Robotics",
       "The Llama 4 herd: natively multimodal models now available",
       "Introducing TRIBE v2: A Predictive Foundation Model Trained to Understand How the Human Brain Processes Complex Stimuli",
       "Scaling How We Build and Test Our Most Advanced AI",
@@ -166,7 +165,7 @@ describe("Meta AI", () => {
       authority: 94,
       channelId: "meta-ai-blog",
     });
-    expect(first[3].publishedAt).toBe("2026-03-26T12:00:00.000Z");
+    expect(first[2].publishedAt).toBe("2026-03-26T12:00:00.000Z");
     expect(first.map((record) => record.url)).not.toContain(
       "https://ai.meta.com/blog/?page=2"
     );
@@ -227,7 +226,6 @@ describe("xAI", () => {
     expect(records.map((record) => record.title)).toEqual([
       "Introducing Grok 4.6",
       "Introducing Grok 4.5",
-      "xAI is hiring research engineers",
     ]);
     expect(records[0].publishedAt).toBe("2026-08-12T12:00:00.000Z");
     expect(

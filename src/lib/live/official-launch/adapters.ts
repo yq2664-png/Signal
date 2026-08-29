@@ -167,9 +167,21 @@ function decodeHtml(value: string): string {
     .replace(/&gt;/gi, ">");
 }
 
+function dateEmbeddedInUrl(html: string, index: number): boolean {
+  const before = html.slice(Math.max(0, index - 160), index);
+  return /(?:https?:\/\/|src\s*=\s*["']|href\s*=\s*["'])[^"'>\s]*$/i.test(
+    before
+  );
+}
+
 function dateMatches(html: string): Array<{ raw: string; index: number }> {
   const found: Array<{ raw: string; index: number }> = [];
   for (const match of html.matchAll(/datetime=["']([^"']+)["']/gi)) {
+    found.push({ raw: match[1], index: match.index ?? 0 });
+  }
+  for (const match of html.matchAll(
+    /class=["'][^"']*date[^"']*["'][^>]*>\s*(20\d{2}-\d{2}-\d{2})/gi
+  )) {
     found.push({ raw: match[1], index: match.index ?? 0 });
   }
   for (const match of html.matchAll(
@@ -178,26 +190,93 @@ function dateMatches(html: string): Array<{ raw: string; index: number }> {
     found.push({ raw: match[0], index: match.index ?? 0 });
   }
   for (const match of html.matchAll(/\b20\d{2}-\d{2}-\d{2}\b/g)) {
+    if (dateEmbeddedInUrl(html, match.index ?? 0)) continue;
     found.push({ raw: match[0], index: match.index ?? 0 });
   }
   return found;
 }
 
-function dateInHtml(html: string): string | undefined {
-  const first = dateMatches(html)[0];
-  return first ? calendarDayUtc(first.raw) || safeIsoDate(first.raw) : undefined;
+function toListingDate(raw: string): string | undefined {
+  return calendarDayUtc(raw);
 }
 
-function dateNear(html: string, index: number): string | undefined {
+function dateInHtml(html: string): string | undefined {
+  const first = dateMatches(html)[0];
+  return first ? toListingDate(first.raw) : undefined;
+}
+
+function dateAfterUntilNextAnchor(
+  html: string,
+  index: number
+): string | undefined {
+  const rest = html.slice(index + 1);
+  const next = rest.search(/<a\b/i);
+  const end = index + 1 + (next === -1 ? Math.min(rest.length, 2_000) : next);
+  return dateInHtml(html.slice(index, end));
+}
+
+function dateImmediatelyBefore(
+  html: string,
+  index: number
+): string | undefined {
   const start = Math.max(0, index - 800);
-  const context = html.slice(start, index + 400);
-  const target = index - start;
-  const dates = dateMatches(context);
-  if (!dates.length) return undefined;
-  const closest = dates.reduce((best, item) =>
-    Math.abs(item.index - target) < Math.abs(best.index - target) ? item : best
+  const slice = html.slice(start, index);
+  const dates = dateMatches(slice);
+  const last = dates.at(-1);
+  if (!last) return undefined;
+  const at = start + last.index;
+  if (/<a\b/i.test(html.slice(at, index))) return undefined;
+  return toListingDate(last.raw);
+}
+
+function listingPublishedAt(
+  html: string,
+  index: number,
+  inner: string,
+  pathname: string,
+  datesByHref: Map<string, string>,
+  anchorIsChrome: boolean
+): string | undefined {
+  if (anchorIsChrome) {
+    return (
+      dateImmediatelyBefore(html, index) ||
+      dateInHtml(inner) ||
+      datesByHref.get(pathname)
+    );
+  }
+  return (
+    dateInHtml(inner) ||
+    dateAfterUntilNextAnchor(html, index) ||
+    datesByHref.get(pathname)
   );
-  return calendarDayUtc(closest.raw) || safeIsoDate(closest.raw);
+}
+
+function hrefDateIndex(html: string): Map<string, string> {
+  const dates = new Map<string, string>();
+  const remember = (href: string, day: string) => {
+    const iso = calendarDayUtc(day);
+    if (!iso) return;
+    try {
+      const path = new URL(href, "https://example.com").pathname.replace(
+        /\/$/,
+        ""
+      );
+      if (path && path !== "/" && !dates.has(path)) dates.set(path, iso);
+    } catch {
+      /* ignore */
+    }
+  };
+  for (const match of html.matchAll(
+    /"href"\s*:\s*"([^"]+)"\s*,\s*"date"\s*:\s*"(20\d{2}-\d{2}-\d{2})"/g
+  )) {
+    remember(match[1], match[2]);
+  }
+  for (const match of html.matchAll(
+    /"date"\s*:\s*"(20\d{2}-\d{2}-\d{2})"\s*,\s*"href"\s*:\s*"([^"]+)"/g
+  )) {
+    remember(match[2], match[1]);
+  }
+  return dates;
 }
 
 function isChromeTitle(title: string): boolean {
@@ -293,6 +372,7 @@ export function parseHtmlListChannel(
   );
   const seen = new Set<string>();
   const results: OfficialLaunchSourceRecord[] = [];
+  const datesByHref = hrefDateIndex(html);
 
   for (const match of anchors) {
     const href = decodeHtml(match[2]);
@@ -309,7 +389,8 @@ export function parseHtmlListChannel(
     }
 
     let content = titleFromAnchor(match[1], match[3]);
-    if (isChromeTitle(content.title)) {
+    const anchorIsChrome = isChromeTitle(content.title);
+    if (anchorIsChrome) {
       const nearby = nearbyListingFallback(html, match.index ?? 0);
       if (nearby.title) {
         content = {
@@ -320,14 +401,23 @@ export function parseHtmlListChannel(
     }
     const title = content.title;
     if (isChromeTitle(title)) continue;
+    const pathname = new URL(url).pathname.replace(/\/$/, "");
+    const publishedAt = listingPublishedAt(
+      html,
+      match.index ?? 0,
+      match[3],
+      pathname,
+      datesByHref,
+      anchorIsChrome
+    );
+    if (!publishedAt) continue;
     seen.add(canonicalUrl);
     results.push(
       record(organization, channel, {
         title,
         summary: content.summary,
         url,
-        publishedAt:
-          dateInHtml(match[3]) || dateNear(html, match.index ?? 0),
+        publishedAt,
       })
     );
     if (results.length >= (channel.limit ?? 10)) break;

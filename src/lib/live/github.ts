@@ -11,11 +11,19 @@ type GhRepo = {
   language: string | null;
   stargazers_count: number;
   forks_count: number;
+  created_at?: string;
   pushed_at: string;
   updated_at: string;
   topics?: string[];
   owner?: { login?: string; avatar_url?: string };
 };
+
+/** Display date: repo creation, not last push (pushed_at updates on every commit). */
+export function githubRepoPublishedAt(
+  repo: Pick<GhRepo, "created_at" | "updated_at" | "pushed_at">
+): string {
+  return repo.created_at || repo.updated_at || repo.pushed_at;
+}
 
 type GhSearchResponse = {
   items?: GhRepo[];
@@ -117,7 +125,7 @@ function toRepoItem(
     originalTitle: repo.full_name,
     originalSummary: desc,
     source,
-    publishedAt: repo.pushed_at || repo.updated_at,
+    publishedAt: githubRepoPublishedAt(repo),
     category: source === "GitHub · Skills" ? "Tools" : "Tools",
     summary: desc,
     url: repo.html_url,
