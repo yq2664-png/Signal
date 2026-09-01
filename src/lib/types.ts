@@ -298,6 +298,7 @@ export interface ResearchPaperFeedMeta {
   relevanceCue?: ResearchPaperRelevanceCue;
   venue?: string;
   categories?: string[];
+  productImplication?: boolean;
 }
 
 export interface ResearchPaperCandidateDiagnostic {
