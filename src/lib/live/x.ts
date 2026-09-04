@@ -1,7 +1,11 @@
 import type { FeedItem } from "@/lib/types";
 import { slugId, toFeedItem } from "@/lib/live/normalize";
 import { parseSourceDate } from "@/lib/live/source-date";
-import { qualifyXPost } from "@/lib/live/x-qualify";
+import {
+  qualifyXPost,
+  shouldPublishXToFeed,
+  type XQualifyVerdict,
+} from "@/lib/live/x-qualify";
 
 type XUser = {
   id: string;
@@ -15,6 +19,12 @@ type XTweet = {
   text?: string;
   created_at?: string;
   author_id?: string;
+  conversation_id?: string;
+  referenced_tweets?: Array<{ type: string; id: string }>;
+  entities?: {
+    urls?: Array<{ expanded_url?: string; display_url?: string }>;
+    mentions?: Array<{ username?: string }>;
+  };
   public_metrics?: {
     like_count?: number;
     retweet_count?: number;
@@ -33,20 +43,45 @@ type XSearchResponse = {
   status?: number;
 };
 
-export async function fetchX(limit = 10): Promise<FeedItem[]> {
+export const X_SEARCH_QUERY =
+  '(AI OR LLM OR GPT OR Claude OR Gemini OR OpenAI OR Anthropic OR "machine learning" OR MCP OR "Claude Code" OR "tool calling") -is:retweet lang:en -horoscope -astrology -zodiac';
+
+export type XSearchCandidate = {
+  id: string;
+  text: string;
+  authorName?: string;
+  authorHandle?: string;
+  isReply: boolean;
+  likes: number;
+  reposts: number;
+  replies: number;
+  quotes: number;
+  createdAt?: string;
+  verdict: XQualifyVerdict;
+};
+
+function tweetIsReply(tweet: XTweet, text: string): boolean {
+  return (
+    tweet.referenced_tweets?.some((ref) => ref.type === "replied_to") === true ||
+    /^@\w+/.test(text)
+  );
+}
+
+async function searchRecentXTweets(): Promise<{
+  tweets: XTweet[];
+  users: Map<string, XUser>;
+}> {
   const raw = process.env.X_BEARER_TOKEN?.trim();
   if (!raw) {
     throw new Error("X_BEARER_TOKEN is missing in .env.local");
   }
 
-  const query =
-    '(AI OR LLM OR GPT OR Claude OR Gemini OR "machine learning" OR OpenAI OR Anthropic) -is:retweet lang:en';
-
   const params = new URLSearchParams({
-    query,
+    query: X_SEARCH_QUERY,
     max_results: "100",
-    "tweet.fields": "created_at,public_metrics,lang,author_id",
-    expansions: "author_id",
+    "tweet.fields":
+      "created_at,public_metrics,lang,author_id,conversation_id,referenced_tweets,entities",
+    expansions: "author_id,referenced_tweets.id",
     "user.fields": "name,username,profile_image_url",
     sort_order: "recency",
   });
@@ -99,16 +134,47 @@ export async function fetchX(limit = 10): Promise<FeedItem[]> {
     throw new Error(`X API failed: ${lastError}. ${hint}`);
   }
 
-  const users = new Map(
-    (data.includes?.users ?? []).map((u) => [u.id, u] as const)
-  );
+  return {
+    tweets: data.data ?? [],
+    users: new Map((data.includes?.users ?? []).map((u) => [u.id, u] as const)),
+  };
+}
 
-  return (data.data ?? [])
+export async function fetchXQualificationSample(): Promise<XSearchCandidate[]> {
+  const { tweets, users } = await searchRecentXTweets();
+  return tweets
+    .filter((tweet) => tweet.id && tweet.text)
+    .map((tweet) => {
+      const text = tweet.text!.replace(/\s+/g, " ").trim();
+      const isReply = tweetIsReply(tweet, text);
+      const author = tweet.author_id ? users.get(tweet.author_id) : undefined;
+      const metrics = tweet.public_metrics;
+      return {
+        id: tweet.id,
+        text,
+        authorName: author?.name,
+        authorHandle: author?.username ? `@${author.username}` : undefined,
+        isReply,
+        likes: metrics?.like_count ?? 0,
+        reposts: metrics?.retweet_count ?? 0,
+        replies: metrics?.reply_count ?? 0,
+        quotes: metrics?.quote_count ?? 0,
+        createdAt: tweet.created_at,
+        verdict: qualifyXPost(text, { isReply }),
+      };
+    });
+}
+
+export async function fetchX(limit = 10): Promise<FeedItem[]> {
+  const { tweets, users } = await searchRecentXTweets();
+
+  return tweets
     .filter((tweet) => tweet.id && tweet.text)
     .flatMap((tweet) => {
       const text = tweet.text!.replace(/\s+/g, " ").trim();
-      const verdict = qualifyXPost(text);
-      if (verdict.decision === "reject") return [];
+      const isReply = tweetIsReply(tweet, text);
+      const verdict = qualifyXPost(text, { isReply });
+      if (!shouldPublishXToFeed(verdict)) return [];
 
       const publishedAt = parseSourceDate(tweet.created_at);
       if (!publishedAt) return [];
@@ -140,7 +206,8 @@ export async function fetchX(limit = 10): Promise<FeedItem[]> {
           tags: ["live", "x", "twitter", handle.replace("@", "")],
           extraTrend: Math.min(40, Math.round(engagement / 5)),
           avatarUrl: avatar,
-          briefEligible: verdict.decision === "feed-brief",
+          briefEligible: true,
+          briefReadiness: "full",
           native: {
             authorName: name,
             authorHandle: handle,
