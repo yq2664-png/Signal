@@ -39,6 +39,12 @@ const WHY: Record<ResearchPaperRelevanceCue, string> = {
     "Silent video generation is incomplete once picture and sound must stay together.",
   HCI: "Safety and identity features have to be designed with the people they affect.",
   Eval: "Product teams can test experiences against diverse simulated users before a live study.",
+  "Generative UI":
+    "Interfaces that write themselves change how a product is composed, not only how it is themed.",
+  Embodied:
+    "Robots and wearables move AI out of the chat box and into shared physical space.",
+  Trust:
+    "Teams cannot ship an assistant they cannot explain, bound, or red-team.",
 };
 
 const IMPACT: Record<ResearchPaperRelevanceCue, string> = {
@@ -52,6 +58,12 @@ const IMPACT: Record<ResearchPaperRelevanceCue, string> = {
     "Video products can ship picture and sound as one synchronized generation.",
   HCI: "Social and spatial products can add protection that disabled users would actually use.",
   Eval: "PMs can run persona-scale product tests that offline benchmarks flatten away.",
+  "Generative UI":
+    "A product can generate screens and flows instead of shipping one fixed layout.",
+  Embodied:
+    "Physical products can treat human-robot interaction as the interface, not a demo.",
+  Trust:
+    "Safety, uncertainty, and eval work can become a product requirement instead of a paper appendix.",
 };
 
 export function makeResearchPaperBrief(
