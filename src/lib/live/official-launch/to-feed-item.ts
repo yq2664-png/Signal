@@ -1,6 +1,12 @@
+import {
+  assessBriefReadiness,
+  recoverOfficialLaunchEvidence,
+} from "@/lib/live/brief-readiness";
 import { toFeedItem, tierFromScores } from "@/lib/live/normalize";
+import type { EnrichmentFetchHtml } from "@/lib/live/official-launch/enrich";
 import { publicReadUrl } from "@/lib/live/public-read-url";
 import type {
+  BriefReadiness,
   Category,
   FeedItem,
   OfficialLaunchEvent,
@@ -17,8 +23,9 @@ function categoryFor(event: OfficialLaunchEvent): Category {
   return event.eventType === "api-release" ? "Tools" : "AI Products";
 }
 
-export function officialLaunchEventToFeedItem(
-  event: OfficialLaunchEvent
+function mapOfficialLaunchEvent(
+  event: OfficialLaunchEvent,
+  evidence: { summary: string; readiness: BriefReadiness }
 ): FeedItem {
   const scores: Scores = {
     impact: event.impactScore,
@@ -28,12 +35,14 @@ export function officialLaunchEventToFeedItem(
     ),
   };
   const primary = event.primarySource;
+  const recoveredFull =
+    evidence.readiness === "full" && evidence.summary !== primary.summary;
   const item = toFeedItem({
     id: event.eventId,
     title: event.title,
     originalTitle: primary.title,
-    summary: event.summary,
-    originalSummary: primary.summary,
+    summary: evidence.summary,
+    originalSummary: recoveredFull ? evidence.summary : primary.summary,
     source: event.organizationName,
     publishedAt: event.publishedAt,
     category: categoryFor(event),
@@ -53,6 +62,7 @@ export function officialLaunchEventToFeedItem(
           ? `${event.sources.length} official sources`
           : `${event.organizationName} · Official`,
     },
+    briefReadiness: evidence.readiness,
   });
 
   return {
@@ -79,8 +89,43 @@ export function officialLaunchEventToFeedItem(
   };
 }
 
+/** Sync mapping used by existing tests. Assesses current evidence only; no fetch. */
+export function officialLaunchEventToFeedItem(
+  event: OfficialLaunchEvent
+): FeedItem {
+  const verdict = assessBriefReadiness({
+    title: event.title,
+    summary: event.summary,
+    entities: event.entities,
+  });
+  return mapOfficialLaunchEvent(event, {
+    summary: event.summary,
+    readiness: verdict.readiness === "full" ? "full" : "factual-only",
+  });
+}
+
 export function officialLaunchEventsToFeedItems(
   events: OfficialLaunchEvent[]
 ): FeedItem[] {
   return events.map(officialLaunchEventToFeedItem);
+}
+
+export async function officialLaunchEventToFeedItemReady(
+  event: OfficialLaunchEvent,
+  fetchHtml?: EnrichmentFetchHtml
+): Promise<FeedItem> {
+  const recovered = await recoverOfficialLaunchEvidence(event, fetchHtml);
+  return mapOfficialLaunchEvent(event, {
+    summary: recovered.summary,
+    readiness: recovered.assessment.readiness,
+  });
+}
+
+export async function officialLaunchEventsToFeedItemsReady(
+  events: OfficialLaunchEvent[],
+  fetchHtml?: EnrichmentFetchHtml
+): Promise<FeedItem[]> {
+  return Promise.all(
+    events.map((event) => officialLaunchEventToFeedItemReady(event, fetchHtml))
+  );
 }

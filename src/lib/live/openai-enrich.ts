@@ -5,7 +5,7 @@ import type { FeedItem, Scores } from "@/lib/types";
 import { autoFlagIfNeeded } from "@/lib/live/bad-cases";
 import { getCacheDir } from "@/lib/live/cache-dir";
 import { pruneByAgeAndCap } from "@/lib/live/cache-prune";
-import { tierFromScores } from "@/lib/live/normalize";
+import { resolveBriefReadiness, tierFromScores } from "@/lib/live/normalize";
 
 /** Drop enrichments older than 14d; keep at most 400 newest */
 const ENRICH_MAX_AGE_MS = 14 * 24 * 60 * 60 * 1000;
@@ -219,7 +219,7 @@ async function mapPool<T, R>(
 }
 
 export function shouldEnrichItem(item: FeedItem): boolean {
-  if (item.briefEligible === false) return false;
+  if (resolveBriefReadiness(item) !== "full") return false;
   if (item.tags?.includes("ai-headline")) return false;
   if (item.tags?.includes("research-paper")) return false;
   return true;

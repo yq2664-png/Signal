@@ -7,6 +7,9 @@ export type Category =
 
 export type RankTier = "High Impact" | "Trending" | "Emerging";
 
+/** How much Impact Brief analysis the product is allowed to generate. */
+export type BriefReadiness = "full" | "factual-only" | "none";
+
 /** User-facing Feed cue. Display-only; not a ranking input. */
 export type ValueCue = "High Impact" | "New Capability" | "Developer Signal";
 
@@ -455,6 +458,12 @@ export interface FeedItem {
    * Omitted / true keeps the existing Brief path (OL, RP, DC, and other sources).
    */
   briefEligible?: boolean;
+  /**
+   * Qualification decides Feed membership. Readiness decides Brief depth.
+   * Omitted defaults to `full` (RP, DC, and existing rich OL).
+   * X `briefEligible === false` maps to `none`.
+   */
+  briefReadiness?: BriefReadiness;
   readingTimeMin: number;
   /** Optional article/video cover (not avatars) */
   imageUrl?: string;

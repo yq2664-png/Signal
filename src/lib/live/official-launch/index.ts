@@ -20,7 +20,7 @@ import {
   type SemanticMatchDecider,
 } from "@/lib/live/official-launch/match";
 import { selectPublishableEvents } from "@/lib/live/official-launch/score";
-import { officialLaunchEventsToFeedItems } from "@/lib/live/official-launch/to-feed-item";
+import { officialLaunchEventsToFeedItemsReady } from "@/lib/live/official-launch/to-feed-item";
 import type {
   FeedItem,
   OfficialLaunchEvent,
@@ -163,7 +163,7 @@ export async function fetchOfficialLaunchFeedItems(): Promise<
 > {
   const result = await fetchOfficialLaunchEvents();
   return {
-    data: officialLaunchEventsToFeedItems(result.data),
+    data: await officialLaunchEventsToFeedItemsReady(result.data),
     errors: result.errors,
     diagnosticsRunId: result.diagnosticsRunId,
   };

@@ -1,4 +1,11 @@
-import type { Category, FeedItem, RankTier, Scores, Source } from "@/lib/types";
+import type {
+  BriefReadiness,
+  Category,
+  FeedItem,
+  RankTier,
+  Scores,
+  Source,
+} from "@/lib/types";
 import { isVerifiedPublishedAt } from "@/lib/live/source-date";
 
 const AI_KEYWORDS = [
@@ -148,6 +155,21 @@ export function isBriefEligible(item: { briefEligible?: boolean }): boolean {
   return item.briefEligible !== false;
 }
 
+export function resolveBriefReadiness(item: {
+  briefReadiness?: BriefReadiness;
+  briefEligible?: boolean;
+}): BriefReadiness {
+  if (item.briefReadiness) return item.briefReadiness;
+  if (item.briefEligible === false) return "none";
+  return "full";
+}
+
+export const FACTUAL_ONLY_NOTICE =
+  "Not enough source evidence yet to support a full Impact Brief.";
+
+export const NONE_BRIEF_NOTICE =
+  "Not enough source evidence for an Impact Brief. Read the original post.";
+
 const EMPTY_BRIEF: FeedItem["brief"] = {
   whatHappened: "",
   whyItMatters: "",
@@ -173,6 +195,35 @@ export function makeBrief(input: {
   };
 }
 
+function sameNormalized(left: string, right: string): boolean {
+  return (
+    left.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim() ===
+    right.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()
+  );
+}
+
+export function makeFactualBrief(input: {
+  title: string;
+  summary: string;
+  source: Source;
+  publishedAt?: string;
+}): FeedItem["brief"] {
+  const title = input.title.trim();
+  const summary = input.summary.trim();
+  const date = input.publishedAt?.slice(0, 10);
+  const head = date
+    ? `${input.source} published ${title} on ${date}.`
+    : `${input.source} published ${title}.`;
+  const extra =
+    summary && !sameNormalized(summary, title) ? ` ${summary}` : "";
+  return {
+    whatHappened: `${head}${extra}`.slice(0, 420),
+    whyItMatters: "",
+    potentialImpact: "",
+    keyTakeaway: "",
+  };
+}
+
 export function toFeedItem(input: {
   id: string;
   title: string;
@@ -189,6 +240,7 @@ export function toFeedItem(input: {
   originalTitle?: string;
   originalSummary?: string;
   briefEligible?: boolean;
+  briefReadiness?: BriefReadiness;
 }): FeedItem {
   const summary = stripHtml(input.summary) || input.title;
   const title = stripHtml(input.title);
@@ -204,6 +256,13 @@ export function toFeedItem(input: {
     publishedAt: input.publishedAt ?? "",
     extraTrend: input.extraTrend,
   });
+  const briefReadiness =
+    input.briefReadiness ??
+    (input.briefEligible === false ? "none" : undefined);
+  const readiness = resolveBriefReadiness({
+    briefReadiness,
+    briefEligible: input.briefEligible,
+  });
 
   return {
     id: input.id,
@@ -217,15 +276,23 @@ export function toFeedItem(input: {
     tags: input.tags ?? ["live"],
     url: input.url,
     brief:
-      input.briefEligible === false
+      readiness === "none"
         ? EMPTY_BRIEF
-        : makeBrief({
-            title,
-            summary,
-            source: input.source,
-            category: input.category,
-          }),
+        : readiness === "factual-only"
+          ? makeFactualBrief({
+              title,
+              summary,
+              source: input.source,
+              publishedAt: input.publishedAt,
+            })
+          : makeBrief({
+              title,
+              summary,
+              source: input.source,
+              category: input.category,
+            }),
     briefEligible: input.briefEligible,
+    briefReadiness,
     readingTimeMin: readingTime(summary),
     imageUrl: input.imageUrl,
     avatarUrl: input.avatarUrl,

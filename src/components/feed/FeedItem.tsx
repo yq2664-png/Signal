@@ -9,7 +9,11 @@ import { ValueCueBadge } from "@/components/ui/Badge";
 import { useBookmarks } from "@/context/BookmarksContext";
 import { useLikes } from "@/context/LikesContext";
 import type { FeedItem } from "@/lib/types";
-import { isBriefEligible } from "@/lib/live/normalize";
+import {
+  FACTUAL_ONLY_NOTICE,
+  NONE_BRIEF_NOTICE,
+  resolveBriefReadiness,
+} from "@/lib/live/normalize";
 import { presentBrief } from "@/lib/surface/present-brief";
 import { formatRelative } from "@/lib/utils";
 
@@ -102,11 +106,12 @@ export function ImpactBriefPanel({
 }: {
   item: FeedItem;
 }) {
-  const showBrief = isBriefEligible(item);
+  const readiness = resolveBriefReadiness(item);
   const brief = presentBrief(item.brief);
-  const sections = showBrief
-    ? BRIEF_SECTIONS.filter((section) => brief[section.key])
-    : [];
+  const sections =
+    readiness === "full"
+      ? BRIEF_SECTIONS.filter((section) => brief[section.key])
+      : [];
   const sourceText = item.originalSummary || item.summary;
   const { isLiked, toggleLike } = useLikes();
   const { isBookmarked, toggleBookmark } = useBookmarks();
@@ -181,7 +186,7 @@ export function ImpactBriefPanel({
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
-        {showBrief ? (
+        {readiness === "full" ? (
           <>
             <div className="label mb-4">Impact Brief</div>
             <div className="space-y-5">
@@ -214,6 +219,30 @@ export function ImpactBriefPanel({
               ))}
             </div>
           </>
+        ) : readiness === "factual-only" ? (
+          <>
+            <div className="label mb-4">Facts</div>
+            {brief.whatHappened ? (
+              <section className="slide-in">
+                <h3 className="mb-0.5 text-[13px] font-semibold text-[var(--text-primary)]">
+                  What happened
+                </h3>
+                <p className="mb-1.5 text-[11px] text-[var(--text-muted)]">
+                  Source-supported facts
+                </p>
+                <p className="text-[14px] leading-[22px] text-[var(--text-secondary)]">
+                  {brief.whatHappened}
+                </p>
+              </section>
+            ) : sourceText ? (
+              <p className="text-[14px] leading-[22px] text-[var(--text-secondary)]">
+                {sourceText}
+              </p>
+            ) : null}
+            <p className="mt-4 text-[12px] leading-5 text-[var(--text-muted)]">
+              {FACTUAL_ONLY_NOTICE}
+            </p>
+          </>
         ) : (
           <>
             <div className="label mb-4">Source</div>
@@ -223,7 +252,7 @@ export function ImpactBriefPanel({
               </p>
             ) : null}
             <p className="mt-4 text-[12px] leading-5 text-[var(--text-muted)]">
-              Not enough source evidence for an Impact Brief. Read the original post.
+              {NONE_BRIEF_NOTICE}
             </p>
           </>
         )}

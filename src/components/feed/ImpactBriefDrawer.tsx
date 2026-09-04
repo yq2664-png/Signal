@@ -10,7 +10,7 @@ import {
 import { GripHorizontal, X } from "lucide-react";
 import { ImpactBriefPanel } from "@/components/feed/FeedItem";
 import { Button } from "@/components/ui/Button";
-import { isBriefEligible } from "@/lib/live/normalize";
+import { resolveBriefReadiness } from "@/lib/live/normalize";
 import type { FeedItem } from "@/lib/types";
 
 const MIN_W = 300;
@@ -299,7 +299,12 @@ export function ImpactBriefDrawer({
               strokeWidth={1.75}
             />
             <span className="label mb-0">
-              {isBriefEligible(item) ? "Impact Brief" : "Source"}
+              {(() => {
+                const readiness = resolveBriefReadiness(item);
+                if (readiness === "full") return "Impact Brief";
+                if (readiness === "factual-only") return "Facts";
+                return "Source";
+              })()}
             </span>
           </div>
           <Button
