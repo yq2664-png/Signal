@@ -4,6 +4,7 @@ import {
   personalizationBoost,
   type UserPrefs,
 } from "@/lib/personalization";
+import { isVerifiedPublishedAt } from "@/lib/live/source-date";
 
 export function formatDate(iso: string): string {
   const date = new Date(iso);
@@ -14,15 +15,16 @@ export function formatDate(iso: string): string {
   });
 }
 
-export function formatRelative(iso: string): string {
-  const date = new Date(iso);
+export function formatRelative(iso?: string): string {
+  if (!isVerifiedPublishedAt(iso)) return "";
+  const date = new Date(iso!);
   const diffMs = Date.now() - date.getTime();
   const hours = Math.floor(diffMs / (1000 * 60 * 60));
   if (hours < 1) return "Just now";
   if (hours < 24) return `${hours}h ago`;
   const days = Math.floor(hours / 24);
   if (days < 7) return `${days}d ago`;
-  return formatDate(iso);
+  return formatDate(iso!);
 }
 
 export function compositeScore(scores: Scores): number {
@@ -129,10 +131,12 @@ export function contentQualityScore(item: FeedItem): number {
   )
     q -= 12;
 
-  const ageH =
-    (Date.now() - new Date(item.publishedAt).getTime()) / 36e5;
-  if (ageH < 48) q += 10;
-  else if (ageH > 720) q -= 8;
+  if (isVerifiedPublishedAt(item.publishedAt)) {
+    const ageH =
+      (Date.now() - new Date(item.publishedAt).getTime()) / 36e5;
+    if (ageH < 48) q += 10;
+    else if (ageH > 720) q -= 8;
+  }
 
   return q;
 }

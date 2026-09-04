@@ -200,7 +200,7 @@ async function fetchOpenAlexVenue(
             .filter(Boolean) ?? [],
         publishedAt: work.publication_date
           ? `${work.publication_date}T00:00:00.000Z`
-          : now.toISOString(),
+          : "",
         arxivId,
         doi,
         url:
@@ -328,7 +328,7 @@ async function fetchDblpVenue(
         title: paper.title,
         abstract: "",
         authors: paper.authors,
-        publishedAt: now.toISOString(),
+        publishedAt: `${year}-01-01T12:00:00.000Z`,
         arxivId: paper.arxivId,
         doi: paper.doi,
         url: paper.url || (paper.doi ? `https://doi.org/${paper.doi}` : undefined),
@@ -469,7 +469,9 @@ async function fetchOpenAlexConference(
           work.authorships
             ?.map((item) => item.author?.display_name?.trim() ?? "")
             .filter(Boolean) ?? [],
-        publishedAt: now.toISOString(),
+        publishedAt: work.publication_date
+          ? `${work.publication_date}T00:00:00.000Z`
+          : "",
         arxivId,
         doi,
         url:

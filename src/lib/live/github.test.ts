@@ -12,12 +12,12 @@ describe("githubRepoPublishedAt", () => {
     ).toBe("2023-04-12T10:00:00.000Z");
   });
 
-  it("falls back to updated_at when created_at is missing", () => {
+  it("does not use push or update time when created_at is missing", () => {
     expect(
       githubRepoPublishedAt({
         updated_at: "2025-01-02T00:00:00.000Z",
         pushed_at: "2026-08-28T00:00:00.000Z",
       })
-    ).toBe("2025-01-02T00:00:00.000Z");
+    ).toBeUndefined();
   });
 });

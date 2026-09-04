@@ -5,6 +5,7 @@ import { rewriteFeedTitle } from "@/lib/live/headlines";
 import { liveFetchOptions } from "@/lib/live/live-fetch";
 import { looksAiRelated, slugId, stripHtml, toFeedItem } from "@/lib/live/normalize";
 import { enrichOgImages } from "@/lib/live/og-image";
+import { parseSourceDate } from "@/lib/live/source-date";
 import { looksLikeModelRelease } from "@/lib/utils";
 
 type RssItem = {
@@ -24,10 +25,7 @@ type RssItem = {
 };
 
 function rssPublishedAt(item: RssItem): string | undefined {
-  const raw = item.isoDate || item.pubDate;
-  if (!raw) return undefined;
-  const date = new Date(raw);
-  return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
+  return parseSourceDate(item.isoDate || item.pubDate);
 }
 
 const parser = new Parser({

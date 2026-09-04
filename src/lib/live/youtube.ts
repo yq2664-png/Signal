@@ -1,6 +1,7 @@
 import type { FeedItem } from "@/lib/types";
 import { liveFetchOptions } from "@/lib/live/live-fetch";
 import { slugId, toFeedItem } from "@/lib/live/normalize";
+import { parseSourceDate } from "@/lib/live/source-date";
 
 type YtThumbnail = { url?: string; width?: number; height?: number };
 
@@ -123,13 +124,12 @@ export async function fetchYouTube(limit = 8): Promise<FeedItem[]> {
   const videoIds = searchItems.map((i) => i.id!.videoId!);
   const details = await fetchVideoDetails(key, videoIds);
 
-  return searchItems.map((item) => {
+  return searchItems.flatMap((item) => {
     const videoId = item.id!.videoId!;
     const title = item.snippet!.title!;
     const description = item.snippet?.description || title;
-    const publishedAt = item.snippet?.publishedAt
-      ? new Date(item.snippet.publishedAt).toISOString()
-      : new Date().toISOString();
+    const publishedAt = parseSourceDate(item.snippet?.publishedAt);
+    if (!publishedAt) return [];
     const channel = item.snippet?.channelTitle || "YouTube";
     const detail = details.get(videoId);
     const views = detail?.statistics?.viewCount
@@ -140,7 +140,7 @@ export async function fetchYouTube(limit = 8): Promise<FeedItem[]> {
       ? Math.min(20, Math.round(Math.log10(views + 1) * 4))
       : 8;
 
-    return toFeedItem({
+    return [toFeedItem({
       id: slugId("yt", videoId),
       title,
       source: "YouTube",
@@ -157,6 +157,6 @@ export async function fetchYouTube(limit = 8): Promise<FeedItem[]> {
         views,
         durationLabel,
       },
-    });
+    })];
   });
 }

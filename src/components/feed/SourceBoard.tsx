@@ -13,6 +13,28 @@ import { sourceChrome } from "@/lib/source-chrome";
 import { sourceGroups, type SourceGroupId } from "@/lib/source-groups";
 import { formatRelative } from "@/lib/utils";
 
+function PublishedLabel({
+  at,
+  className,
+  prefix = "",
+  suffix = "",
+}: {
+  at?: string;
+  className?: string;
+  prefix?: string;
+  suffix?: string;
+}) {
+  const label = formatRelative(at);
+  if (!label) return null;
+  return (
+    <span className={className}>
+      {prefix}
+      {label}
+      {suffix}
+    </span>
+  );
+}
+
 export function SourceGroupChips({
   active,
   onChange,
@@ -365,10 +387,11 @@ function TweetCard({ item }: { item: FeedItem }) {
         <div className="flex flex-wrap items-center gap-x-1.5 text-[13px]">
           <span className="font-semibold text-[var(--text-primary)]">{name}</span>
           <span className="text-[var(--text-muted)]">{handle}</span>
-          <span className="text-[var(--text-muted)]">·</span>
-          <span className="text-[var(--text-muted)]">
-            {formatRelative(item.publishedAt)}
-          </span>
+          <PublishedLabel
+            at={item.publishedAt}
+            prefix="· "
+            className="text-[var(--text-muted)]"
+          />
         </div>
         <p className="mt-1 text-[13px] leading-[20px] text-[var(--text-body)]">
           {item.summary || item.title}
@@ -413,10 +436,13 @@ function NewsCard({
         {item.native?.authorName ? (
           <span className="text-[var(--text-muted)]">{item.native.authorName}</span>
         ) : null}
-        <span className="text-[var(--text-muted)]">
-          {formatRelative(item.publishedAt)}
-        </span>
-        <span className="text-[var(--text-muted)]">·</span>
+        <PublishedLabel
+          at={item.publishedAt}
+          className="text-[var(--text-muted)]"
+        />
+        {formatRelative(item.publishedAt) ? (
+          <span className="text-[var(--text-muted)]">·</span>
+        ) : null}
         <span className="text-[var(--text-muted)]">
           {item.readingTimeMin} min read
         </span>
@@ -449,7 +475,8 @@ function LabCard({ item }: { item: FeedItem }) {
         {item.summary}
       </p>
       <div className="mt-2 text-[11px] text-[var(--text-muted)]">
-        {item.source} · {formatRelative(item.publishedAt)}
+        {item.source}
+        <PublishedLabel at={item.publishedAt} prefix=" · " />
       </div>
     </div>
   );
@@ -496,8 +523,7 @@ function YouTubeCard({
         {channel}
         {views != null ? ` · ${formatCount(views)} views` : null}
         {duration && !item.imageUrl ? ` · ${duration}` : null}
-        {" · "}
-        {formatRelative(item.publishedAt)}
+        <PublishedLabel at={item.publishedAt} prefix=" · " />
       </div>
     </div>
   );
@@ -569,7 +595,7 @@ function PaperCard({
         {item.native?.authorName ? (
           <span>{item.native.authorName.split(",")[0]}</span>
         ) : null}
-        <span>{formatRelative(item.publishedAt)}</span>
+        <PublishedLabel at={item.publishedAt} />
       </div>
     </div>
   );
@@ -606,7 +632,7 @@ function ForumCard({
         <div className="mt-1 text-[11px] text-[var(--text-muted)]">
           {item.native?.authorName ? `${item.native.authorName} · ` : null}
           {comments != null ? `${comments} comments · ` : null}
-          {formatRelative(item.publishedAt)}
+          <PublishedLabel at={item.publishedAt} />
         </div>
       </div>
     </div>
@@ -645,7 +671,7 @@ function RepoCard({ item }: { item: FeedItem }) {
             <span className="mono">⑂ {formatCount(forks)}</span>
           ) : null}
           {lang ? <span>{lang}</span> : null}
-          <span>{formatRelative(item.publishedAt)}</span>
+          <PublishedLabel at={item.publishedAt} />
         </div>
       </div>
     </div>

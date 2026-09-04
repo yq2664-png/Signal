@@ -112,7 +112,17 @@ export function issueToEvidence(
   }
   const topic = normalizeTopic(title, body);
   const product = resolveProduct({ repository, title, body });
-  const createdAt = issue.created_at || new Date().toISOString();
+  if (!issue.created_at) {
+    return {
+      rejected: {
+        repository,
+        title,
+        reason: "unverified-date",
+        url: issue.html_url,
+      },
+    };
+  }
+  const createdAt = issue.created_at;
   return {
     evidence: {
       evidenceId: slugId("ghi", `${repository}-${issue.number}`),

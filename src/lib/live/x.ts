@@ -1,5 +1,7 @@
 import type { FeedItem } from "@/lib/types";
 import { slugId, toFeedItem } from "@/lib/live/normalize";
+import { parseSourceDate } from "@/lib/live/source-date";
+import { qualifyXPost } from "@/lib/live/x-qualify";
 
 type XUser = {
   id: string;
@@ -42,7 +44,7 @@ export async function fetchX(limit = 10): Promise<FeedItem[]> {
 
   const params = new URLSearchParams({
     query,
-    max_results: String(Math.min(Math.max(limit, 10), 100)),
+    max_results: "100",
     "tweet.fields": "created_at,public_metrics,lang,author_id",
     expansions: "author_id",
     "user.fields": "name,username,profile_image_url",
@@ -103,8 +105,14 @@ export async function fetchX(limit = 10): Promise<FeedItem[]> {
 
   return (data.data ?? [])
     .filter((tweet) => tweet.id && tweet.text)
-    .slice(0, limit)
-    .map((tweet) => {
+    .flatMap((tweet) => {
+      const text = tweet.text!.replace(/\s+/g, " ").trim();
+      const verdict = qualifyXPost(text);
+      if (verdict.decision === "reject") return [];
+
+      const publishedAt = parseSourceDate(tweet.created_at);
+      if (!publishedAt) return [];
+
       const author = tweet.author_id ? users.get(tweet.author_id) : undefined;
       const handle = author?.username ? `@${author.username}` : "@x";
       const name = author?.name || handle;
@@ -114,37 +122,35 @@ export async function fetchX(limit = 10): Promise<FeedItem[]> {
       const replies = metrics?.reply_count ?? 0;
       const quotes = metrics?.quote_count ?? 0;
       const engagement = likes + reposts * 2 + replies + quotes;
-      const text = tweet.text!.replace(/\s+/g, " ").trim();
       const title =
         text.length > 110 ? `${text.slice(0, 107).trim()}…` : text;
-      const publishedAt = tweet.created_at
-        ? new Date(tweet.created_at).toISOString()
-        : new Date().toISOString();
-
-      // Prefer higher-res avatar when API returns _normal
       const avatar = author?.profile_image_url?.replace("_normal", "_bigger");
 
-      return toFeedItem({
-        id: slugId("x", tweet.id),
-        title,
-        source: "X (Twitter)",
-        publishedAt,
-        category: "Industry Trends",
-        summary: text.slice(0, 420),
-        url: author?.username
-          ? `https://x.com/${author.username}/status/${tweet.id}`
-          : `https://x.com/i/web/status/${tweet.id}`,
-        tags: ["live", "x", "twitter", handle.replace("@", "")],
-        extraTrend: Math.min(40, Math.round(engagement / 5)),
-        avatarUrl: avatar,
-        native: {
-          authorName: name,
-          authorHandle: handle,
-          likes,
-          reposts,
-          replies,
-          quotes,
-        },
-      });
-    });
+      return [
+        toFeedItem({
+          id: slugId("x", tweet.id),
+          title,
+          source: "X (Twitter)",
+          publishedAt,
+          category: "Industry Trends",
+          summary: text.slice(0, 420),
+          url: author?.username
+            ? `https://x.com/${author.username}/status/${tweet.id}`
+            : `https://x.com/i/web/status/${tweet.id}`,
+          tags: ["live", "x", "twitter", handle.replace("@", "")],
+          extraTrend: Math.min(40, Math.round(engagement / 5)),
+          avatarUrl: avatar,
+          briefEligible: verdict.decision === "feed-brief",
+          native: {
+            authorName: name,
+            authorHandle: handle,
+            likes,
+            reposts,
+            replies,
+            quotes,
+          },
+        }),
+      ];
+    })
+    .slice(0, limit);
 }

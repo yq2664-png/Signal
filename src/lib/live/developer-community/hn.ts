@@ -53,7 +53,10 @@ export function hnHitToEvidence(hit: AlgoliaHit):
     return { rejected: { title, reason: excluded, url } };
   }
   const topic = normalizeTopic(title, body);
-  const createdAt = hit.created_at || new Date().toISOString();
+  if (!hit.created_at) {
+    return { rejected: { title, reason: "unverified-date", url } };
+  }
+  const createdAt = hit.created_at;
   return {
     evidence: {
       evidenceId: slugId("hn", hit.objectID || title),

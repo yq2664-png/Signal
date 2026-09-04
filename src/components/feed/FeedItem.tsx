@@ -9,6 +9,7 @@ import { ValueCueBadge } from "@/components/ui/Badge";
 import { useBookmarks } from "@/context/BookmarksContext";
 import { useLikes } from "@/context/LikesContext";
 import type { FeedItem } from "@/lib/types";
+import { isBriefEligible } from "@/lib/live/normalize";
 import { presentBrief } from "@/lib/surface/present-brief";
 import { formatRelative } from "@/lib/utils";
 
@@ -55,9 +56,11 @@ export function FeedRow({
             <span className="truncate text-[11px] text-[var(--text-muted)]">
               {item.source}
             </span>
-            <span className="text-[11px] text-[var(--text-muted)]">
-              {formatRelative(item.publishedAt)}
-            </span>
+            {formatRelative(item.publishedAt) ? (
+              <span className="text-[11px] text-[var(--text-muted)]">
+                {formatRelative(item.publishedAt)}
+              </span>
+            ) : null}
           </div>
           <h2 className="text-[15px] leading-6 font-medium tracking-[-0.015em] text-[var(--text-primary)]">
             {item.title}
@@ -99,8 +102,12 @@ export function ImpactBriefPanel({
 }: {
   item: FeedItem;
 }) {
+  const showBrief = isBriefEligible(item);
   const brief = presentBrief(item.brief);
-  const sections = BRIEF_SECTIONS.filter((section) => brief[section.key]);
+  const sections = showBrief
+    ? BRIEF_SECTIONS.filter((section) => brief[section.key])
+    : [];
+  const sourceText = item.originalSummary || item.summary;
   const { isLiked, toggleLike } = useLikes();
   const { isBookmarked, toggleBookmark } = useBookmarks();
   const liked = isLiked(item.id);
@@ -121,8 +128,12 @@ export function ImpactBriefPanel({
         <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-[var(--text-muted)]">
           <SourceLogo source={item.source} size={12} />
           <span>{item.source}</span>
-          <span>·</span>
-          <span>{formatRelative(item.publishedAt)}</span>
+          {formatRelative(item.publishedAt) ? (
+            <>
+              <span>·</span>
+              <span>{formatRelative(item.publishedAt)}</span>
+            </>
+          ) : null}
         </div>
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <Button
@@ -170,36 +181,52 @@ export function ImpactBriefPanel({
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
-        <div className="label mb-4">Impact Brief</div>
-        <div className="space-y-5">
-          {sections.map((section) => (
-            <section key={section.key} className="slide-in">
-              <h3
-                className={clsx(
-                  "mb-0.5 text-[13px] font-semibold",
-                  section.emphasize
-                    ? "text-[var(--status-label)]"
-                    : "text-[var(--text-primary)]"
-                )}
-              >
-                {section.label}
-              </h3>
-              <p className="mb-1.5 text-[11px] text-[var(--text-muted)]">
-                {section.hint}
+        {showBrief ? (
+          <>
+            <div className="label mb-4">Impact Brief</div>
+            <div className="space-y-5">
+              {sections.map((section) => (
+                <section key={section.key} className="slide-in">
+                  <h3
+                    className={clsx(
+                      "mb-0.5 text-[13px] font-semibold",
+                      section.emphasize
+                        ? "text-[var(--status-label)]"
+                        : "text-[var(--text-primary)]"
+                    )}
+                  >
+                    {section.label}
+                  </h3>
+                  <p className="mb-1.5 text-[11px] text-[var(--text-muted)]">
+                    {section.hint}
+                  </p>
+                  <p
+                    className={clsx(
+                      "text-[14px] leading-[22px]",
+                      section.emphasize
+                        ? "text-[var(--text-body)]"
+                        : "text-[var(--text-secondary)]"
+                    )}
+                  >
+                    {brief[section.key]}
+                  </p>
+                </section>
+              ))}
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="label mb-4">Source</div>
+            {sourceText ? (
+              <p className="text-[14px] leading-[22px] text-[var(--text-secondary)]">
+                {sourceText}
               </p>
-              <p
-                className={clsx(
-                  "text-[14px] leading-[22px]",
-                  section.emphasize
-                    ? "text-[var(--text-body)]"
-                    : "text-[var(--text-secondary)]"
-                )}
-              >
-                {brief[section.key]}
-              </p>
-            </section>
-          ))}
-        </div>
+            ) : null}
+            <p className="mt-4 text-[12px] leading-5 text-[var(--text-muted)]">
+              Not enough source evidence for an Impact Brief. Read the original post.
+            </p>
+          </>
+        )}
         <div className="mt-8">
           <FlagBadCaseButton item={item} quiet />
         </div>

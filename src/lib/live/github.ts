@@ -2,6 +2,7 @@ import type { FeedItem, Source } from "@/lib/types";
 import { rewriteFeedTitle } from "@/lib/live/headlines";
 import { liveFetchOptions } from "@/lib/live/live-fetch";
 import { slugId, toFeedItem } from "@/lib/live/normalize";
+import { parseSourceDate } from "@/lib/live/source-date";
 
 type GhRepo = {
   id: number;
@@ -18,11 +19,11 @@ type GhRepo = {
   owner?: { login?: string; avatar_url?: string };
 };
 
-/** Display date: repo creation, not last push (pushed_at updates on every commit). */
+/** Display date: repo creation only. Push/update times are not a publish date. */
 export function githubRepoPublishedAt(
   repo: Pick<GhRepo, "created_at" | "updated_at" | "pushed_at">
-): string {
-  return repo.created_at || repo.updated_at || repo.pushed_at;
+): string | undefined {
+  return parseSourceDate(repo.created_at);
 }
 
 type GhSearchResponse = {

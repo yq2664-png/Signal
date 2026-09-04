@@ -218,6 +218,13 @@ async function mapPool<T, R>(
   return results;
 }
 
+export function shouldEnrichItem(item: FeedItem): boolean {
+  if (item.briefEligible === false) return false;
+  if (item.tags?.includes("ai-headline")) return false;
+  if (item.tags?.includes("research-paper")) return false;
+  return true;
+}
+
 export type EnrichResult = {
   items: FeedItem[];
   enrichedCount: number;
@@ -245,7 +252,7 @@ export async function enrichFeedItems(items: FeedItem[]): Promise<EnrichResult> 
   const withCache = items.map((item) => {
     const key = cacheKey(item);
     const hit = cache[key];
-    if (hit?.headline) {
+    if (hit?.headline && shouldEnrichItem(item)) {
       cacheHits += 1;
       return applyEnrichment(item, hit);
     }
@@ -254,11 +261,7 @@ export async function enrichFeedItems(items: FeedItem[]): Promise<EnrichResult> 
 
   const needsWork = withCache
     .map((item, index) => ({ item, index, key: cacheKey(items[index]) }))
-    .filter(
-      ({ item }) =>
-        !item.tags?.includes("ai-headline") &&
-        !item.tags?.includes("research-paper")
-    )
+    .filter(({ item }) => shouldEnrichItem(item))
     .sort((a, b) => {
       const sa =
         a.item.scores.impact * 0.45 +

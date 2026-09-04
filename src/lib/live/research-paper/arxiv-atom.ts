@@ -67,10 +67,7 @@ export function parseArxivAtom(xml: string): ArxivCanonical[] {
       abstract: textOf(entry.summary).replace(/\s+/g, " ").trim(),
       authors: authorsOf(entry),
       categories: categoriesOf(entry),
-      publishedAt:
-        textOf(entry.published) ||
-        textOf(entry.updated) ||
-        new Date().toISOString(),
+      publishedAt: textOf(entry.published),
       doi,
       comment,
     };

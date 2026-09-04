@@ -1,4 +1,5 @@
 import type { Category, FeedItem, RankTier, Scores, Source } from "@/lib/types";
+import { isVerifiedPublishedAt } from "@/lib/live/source-date";
 
 const AI_KEYWORDS = [
   "ai",
@@ -67,15 +68,16 @@ export function readingTime(text: string): number {
   return Math.max(2, Math.min(12, Math.round(words / 180) || 2));
 }
 
-function hoursAgo(iso: string): number {
-  return Math.max(0, (Date.now() - new Date(iso).getTime()) / 36e5);
+function hoursAgo(iso?: string): number {
+  if (!isVerifiedPublishedAt(iso)) return 24 * 365;
+  return Math.max(0, (Date.now() - new Date(iso!).getTime()) / 36e5);
 }
 
 export function scoreLiveItem(input: {
   title: string;
   summary: string;
   source: Source;
-  publishedAt: string;
+  publishedAt?: string;
   extraTrend?: number;
 }): { scores: Scores; tier: RankTier } {
   const text = `${input.title} ${input.summary}`.toLowerCase();
@@ -142,6 +144,17 @@ export function tierFromScores(scores: Scores): RankTier {
   return "Emerging";
 }
 
+export function isBriefEligible(item: { briefEligible?: boolean }): boolean {
+  return item.briefEligible !== false;
+}
+
+const EMPTY_BRIEF: FeedItem["brief"] = {
+  whatHappened: "",
+  whyItMatters: "",
+  potentialImpact: "",
+  keyTakeaway: "",
+};
+
 export function makeBrief(input: {
   title: string;
   summary: string;
@@ -164,7 +177,7 @@ export function toFeedItem(input: {
   id: string;
   title: string;
   source: Source;
-  publishedAt: string;
+  publishedAt?: string;
   category: Category;
   summary: string;
   url: string;
@@ -175,6 +188,7 @@ export function toFeedItem(input: {
   native?: FeedItem["native"];
   originalTitle?: string;
   originalSummary?: string;
+  briefEligible?: boolean;
 }): FeedItem {
   const summary = stripHtml(input.summary) || input.title;
   const title = stripHtml(input.title);
@@ -187,7 +201,7 @@ export function toFeedItem(input: {
     title,
     summary,
     source: input.source,
-    publishedAt: input.publishedAt,
+    publishedAt: input.publishedAt ?? "",
     extraTrend: input.extraTrend,
   });
 
@@ -195,19 +209,23 @@ export function toFeedItem(input: {
     id: input.id,
     title,
     source: input.source,
-    publishedAt: input.publishedAt,
+    publishedAt: input.publishedAt ?? "",
     category: input.category,
     summary: summary.slice(0, 420),
     scores,
     tier,
     tags: input.tags ?? ["live"],
     url: input.url,
-    brief: makeBrief({
-      title,
-      summary,
-      source: input.source,
-      category: input.category,
-    }),
+    brief:
+      input.briefEligible === false
+        ? EMPTY_BRIEF
+        : makeBrief({
+            title,
+            summary,
+            source: input.source,
+            category: input.category,
+          }),
+    briefEligible: input.briefEligible,
     readingTimeMin: readingTime(summary),
     imageUrl: input.imageUrl,
     avatarUrl: input.avatarUrl,

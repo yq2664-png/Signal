@@ -241,7 +241,10 @@ export type ResearchPaperRelevanceCue =
   | "Video"
   | "Multimodal"
   | "HCI"
-  | "Eval";
+  | "Eval"
+  | "Generative UI"
+  | "Embodied"
+  | "Trust";
 
 export type ResearchPaperGateReason =
   | "r1-theory"
@@ -447,6 +450,11 @@ export interface FeedItem {
   tags: string[];
   url: string;
   brief: ImpactBrief;
+  /**
+   * When false, the item may appear in Feed but must not receive an Impact Brief.
+   * Omitted / true keeps the existing Brief path (OL, RP, DC, and other sources).
+   */
+  briefEligible?: boolean;
   readingTimeMin: number;
   /** Optional article/video cover (not avatars) */
   imageUrl?: string;

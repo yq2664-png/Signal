@@ -25,7 +25,7 @@ export function communitySignalToFeedItem(signal: CommunitySignal): FeedItem {
       .slice(0, 3)
       .join(" · "),
     source: "Developer Community",
-    publishedAt: signal.lastSeenAt,
+    publishedAt: primary?.createdAt,
     category: "Industry Trends",
     url: primary?.sourceUrl || "",
     tags: [

@@ -1,6 +1,7 @@
 import type { FeedItem } from "@/lib/types";
 import { rewriteFeedTitle } from "@/lib/live/headlines";
 import { looksAiRelated, slugId, toFeedItem } from "@/lib/live/normalize";
+import { parseSourceDate } from "@/lib/live/source-date";
 
 const MIN_POINTS = 15;
 
@@ -44,7 +45,7 @@ export async function fetchHackerNews(limit = 10): Promise<FeedItem[]> {
     .slice(0, limit);
 
   return aiStories.map((item) => {
-    const publishedAt = new Date((item.time ?? 0) * 1000).toISOString();
+    const publishedAt = parseSourceDate(item.time);
     const discussUrl = `https://news.ycombinator.com/item?id=${item.id}`;
     const url = item.url ?? discussUrl;
     const points = item.score ?? 0;

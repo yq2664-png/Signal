@@ -1,6 +1,7 @@
 import { XMLParser } from "fast-xml-parser";
 import type { FeedItem } from "@/lib/types";
 import { slugId, toFeedItem } from "@/lib/live/normalize";
+import { parseSourceDate } from "@/lib/live/source-date";
 
 const parser = new XMLParser({
   ignoreAttributes: false,
@@ -63,13 +64,13 @@ export async function fetchArxiv(limit = 12): Promise<FeedItem[]> {
   const doc = parser.parse(xml);
   const entries = doc?.feed?.entry ?? [];
 
-  return entries.map((entry: Record<string, unknown>) => {
+  return entries.flatMap((entry: Record<string, unknown>) => {
     const idRaw = textOf(entry.id);
     const arxivId = idRaw.split("/abs/").pop() ?? idRaw;
     const title = textOf(entry.title);
     const abstract = textOf(entry.summary);
-    const published =
-      textOf(entry.published) || textOf(entry.updated) || new Date().toISOString();
+    const published = parseSourceDate(textOf(entry.published));
+    if (!title || !published) return [];
     const linkNode = entry.link;
     let absUrl = `https://arxiv.org/abs/${arxivId}`;
     if (Array.isArray(linkNode)) {
@@ -93,11 +94,11 @@ export async function fetchArxiv(limit = 12): Promise<FeedItem[]> {
       ? `${byline}. ${abstract}`.slice(0, 420)
       : abstract;
 
-    return toFeedItem({
+    return [toFeedItem({
       id: slugId("arxiv", arxivId),
       title,
       source: "arXiv",
-      publishedAt: new Date(published).toISOString(),
+      publishedAt: published,
       category: "Research Papers",
       summary,
       url: absUrl,
@@ -106,6 +107,6 @@ export async function fetchArxiv(limit = 12): Promise<FeedItem[]> {
         authorName: byline,
         subtitle: category,
       },
-    });
+    })];
   });
 }

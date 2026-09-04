@@ -3,6 +3,7 @@ import { liveFetchOptions } from "@/lib/live/live-fetch";
 import { slugId, stripHtml, toFeedItem } from "@/lib/live/normalize";
 import { enrichOgImages } from "@/lib/live/og-image";
 import type { FeedItem } from "@/lib/types";
+import { parseSourceDate } from "@/lib/live/source-date";
 import { looksLikeModelRelease } from "@/lib/utils";
 
 type WpRendered = { rendered?: string };
@@ -62,11 +63,10 @@ export async function fetchXinZhiYuan(limit = 6): Promise<FeedItem[]> {
         stripHtml(post.excerpt?.rendered ?? "") ||
         stripHtml(post.content?.rendered ?? "").slice(0, 280) ||
         rawTitle;
-      const publishedAt = post.date_gmt
-        ? new Date(`${post.date_gmt}Z`).toISOString()
-        : post.date
-          ? new Date(post.date).toISOString()
-          : new Date().toISOString();
+      const publishedAt =
+        parseSourceDate(post.date_gmt ? `${post.date_gmt}Z` : undefined) ||
+        parseSourceDate(post.date);
+      if (!publishedAt) return [];
       const category = looksLikeModelRelease(rawTitle, summary)
         ? ("Model Releases" as const)
         : ("Industry Trends" as const);

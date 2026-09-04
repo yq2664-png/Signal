@@ -7,6 +7,7 @@ import type {
 } from "@/lib/live/official-launch/config";
 import { canonicalizeUrl, identityUrl } from "@/lib/live/official-launch/dedupe";
 import { stripHtml } from "@/lib/live/normalize";
+import { parseSourceDate } from "@/lib/live/source-date";
 
 type Adapter = (
   organization: OfficialLaunchOrganizationConfig,
@@ -35,12 +36,8 @@ function absoluteUrl(raw: string, base: string): string | undefined {
   }
 }
 
-function safeIsoDate(raw?: string): string {
-  if (!raw) return new Date().toISOString();
-  const date = new Date(raw);
-  return Number.isNaN(date.getTime())
-    ? new Date().toISOString()
-    : date.toISOString();
+function safeIsoDate(raw?: string): string | undefined {
+  return parseSourceDate(raw);
 }
 
 function calendarDayUtc(raw: string): string | undefined {
@@ -97,7 +94,7 @@ function record(
     originalContent: input.summary || input.title,
     url: input.url,
     canonicalUrl,
-    publishedAt: safeIsoDate(input.publishedAt),
+    publishedAt: safeIsoDate(input.publishedAt) ?? "",
     author: input.author,
   };
 }
@@ -111,14 +108,15 @@ export async function parseRssChannel(
   return ((feed.items as ParsedRssItem[] | undefined) ?? [])
     .flatMap((item) => {
       const url = item.link || item.guid;
-      if (!item.title || !url) return [];
+      const publishedAt = parseSourceDate(item.isoDate || item.pubDate);
+      if (!item.title || !url || !publishedAt) return [];
       return [
         record(organization, channel, {
           sourceId: item.guid,
           title: item.title,
           summary: item.contentSnippet || item.content,
           url,
-          publishedAt: item.isoDate || item.pubDate,
+          publishedAt,
           author: item.creator,
         }),
       ];
