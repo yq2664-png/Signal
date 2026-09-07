@@ -1,17 +1,41 @@
 "use client";
 
 import { clsx } from "clsx";
-import { memo, type ReactNode } from "react";
+import {
+  Children,
+  memo,
+  useCallback,
+  useEffect,
+  useRef,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
 import { Bookmark, Heart } from "lucide-react";
 import { SafeImage } from "@/components/feed/SafeImage";
 import { SourceLogo } from "@/components/feed/SourceLogo";
 import { PullToRefresh } from "@/components/feed/PullToRefresh";
 import { useBookmarks } from "@/context/BookmarksContext";
 import { useLikes } from "@/context/LikesContext";
+import { columnCountFromWidth, splitIntoColumns } from "@/lib/board-layout";
 import type { FeedItem } from "@/lib/types";
 import { sourceChrome } from "@/lib/source-chrome";
 import { sourceGroups, type SourceGroupId } from "@/lib/source-groups";
 import { formatRelative } from "@/lib/utils";
+
+type SeenTarget = Pick<FeedItem, "id" | "url">;
+
+function subscribeViewport(onStoreChange: () => void) {
+  window.addEventListener("resize", onStoreChange);
+  return () => window.removeEventListener("resize", onStoreChange);
+}
+
+function useBoardColumnCount() {
+  return useSyncExternalStore(
+    subscribeViewport,
+    () => columnCountFromWidth(window.innerWidth),
+    () => 3
+  );
+}
 
 function PublishedLabel({
   at,
@@ -84,6 +108,7 @@ export function SourceBoard({
   items,
   selectedId,
   onSelect,
+  onSeen,
   onRefresh,
   refreshing = false,
   loading = false,
@@ -92,6 +117,7 @@ export function SourceBoard({
   items: FeedItem[];
   selectedId?: string;
   onSelect: (id: string) => void;
+  onSeen?: (item: Pick<FeedItem, "id" | "url">) => void;
   onRefresh?: () => void;
   refreshing?: boolean;
   loading?: boolean;
@@ -99,34 +125,52 @@ export function SourceBoard({
 }) {
   const { isLiked, toggleLike, getLikes } = useLikes();
   const { isBookmarked, toggleBookmark } = useBookmarks();
-  const board =
-    items.length === 0 ? (
-      loading ? (
-        <BoardFrame busy>
-          <BoardSkeleton />
-        </BoardFrame>
-      ) : (
-        <div className="flex min-h-full items-center justify-center p-8">
-          <p className="text-[13px] text-[var(--text-muted)]">{emptyMessage}</p>
-        </div>
-      )
-    ) : (
-      <BoardFrame>
-        {items.map((item) => (
-          <BoardCard
-            key={item.id}
-            item={item}
-            selected={selectedId === item.id}
-            liked={isLiked(item.id)}
-            saved={isBookmarked(item.id)}
-            likeCount={getLikes(item.id)}
-            onSelect={onSelect}
-            onToggleLike={toggleLike}
-            onToggleSave={toggleBookmark}
-          />
-        ))}
-      </BoardFrame>
-    );
+  const columnCount = useBoardColumnCount();
+  const visibleRef = useRef(new Map<string, SeenTarget>());
+  const renderable = items.filter((item) => item.title.trim());
+  const showSkeleton = refreshing || (loading && renderable.length === 0);
+
+  const onVisible = useCallback((item: SeenTarget, visible: boolean) => {
+    if (visible) visibleRef.current.set(item.id, { id: item.id, url: item.url });
+    else visibleRef.current.delete(item.id);
+  }, []);
+
+  const handleRefresh = useCallback(() => {
+    if (onSeen) {
+      for (const item of visibleRef.current.values()) onSeen(item);
+    }
+    onRefresh?.();
+  }, [onRefresh, onSeen]);
+
+  const board = showSkeleton ? (
+    <BoardFrame busy columnCount={columnCount}>
+      {SKELETON_CARDS.map((card, index) => (
+        <SkeletonCard key={index} card={card} />
+      ))}
+    </BoardFrame>
+  ) : renderable.length === 0 ? (
+    <div className="flex min-h-full items-center justify-center p-8">
+      <p className="text-[13px] text-[var(--text-muted)]">{emptyMessage}</p>
+    </div>
+  ) : (
+    <BoardFrame columnCount={columnCount}>
+      {renderable.map((item) => (
+        <BoardCard
+          key={item.id}
+          item={item}
+          selected={selectedId === item.id}
+          liked={isLiked(item.id)}
+          saved={isBookmarked(item.id)}
+          likeCount={getLikes(item.id)}
+          onSelect={onSelect}
+          onSeen={onSeen}
+          onVisible={onVisible}
+          onToggleLike={toggleLike}
+          onToggleSave={toggleBookmark}
+        />
+      ))}
+    </BoardFrame>
+  );
 
   if (!onRefresh) {
     return <div className="h-full min-h-0 overflow-y-auto">{board}</div>;
@@ -135,7 +179,7 @@ export function SourceBoard({
   return (
     <PullToRefresh
       className="h-full min-h-0"
-      onRefresh={onRefresh}
+      onRefresh={handleRefresh}
       refreshing={refreshing}
     >
       {board}
@@ -146,10 +190,13 @@ export function SourceBoard({
 function BoardFrame({
   children,
   busy = false,
+  columnCount,
 }: {
   children: ReactNode;
   busy?: boolean;
+  columnCount: number;
 }) {
+  const columns = splitIntoColumns(Children.toArray(children), columnCount);
   return (
     <div
       className="relative min-h-full bg-[var(--bg)]"
@@ -166,8 +213,15 @@ function BoardFrame({
         }}
       />
       <div className="relative px-4 py-4 md:px-5">
-        <div className="columns-1 gap-4 sm:columns-2 xl:columns-3 2xl:columns-4">
-          {children}
+        <div className="flex items-start gap-4">
+          {columns.map((column, index) => (
+            <div
+              key={index}
+              className="flex min-w-0 flex-1 flex-col gap-4"
+            >
+              {column}
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -189,12 +243,13 @@ const SKELETON_CARDS: Array<{ media: boolean; lines: number }> = [
   { media: false, lines: 2 },
 ];
 
-function BoardSkeleton() {
-  return SKELETON_CARDS.map((card, index) => (
-    <article
-      key={index}
-      className="glass-card mb-4 break-inside-avoid overflow-hidden rounded-[12px]"
-    >
+function SkeletonCard({
+  card,
+}: {
+  card: (typeof SKELETON_CARDS)[number];
+}) {
+  return (
+    <article className="glass-card overflow-hidden rounded-[12px]">
       <header
         className="flex items-center gap-2 px-3.5 pt-3 pb-1.5"
         style={{ background: "rgba(255,255,255,0.02)" }}
@@ -223,7 +278,61 @@ function BoardSkeleton() {
         </div>
       </div>
     </article>
-  ));
+  );
+}
+
+const IMPRESSION_MS = 650;
+
+function useFeedImpression(
+  item: SeenTarget,
+  onSeen?: (item: SeenTarget) => void,
+  onVisible?: (item: SeenTarget, visible: boolean) => void
+) {
+  const ref = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (!onSeen && !onVisible) return;
+    const el = ref.current;
+    if (!el) return;
+
+    const seen = { id: item.id, url: item.url };
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let sent = false;
+    let visible = false;
+
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry) return;
+        const nextVisible =
+          entry.isIntersecting && entry.intersectionRatio >= 0.35;
+        if (nextVisible !== visible) {
+          visible = nextVisible;
+          onVisible?.(seen, visible);
+        }
+        if (sent || !onSeen) return;
+        if (nextVisible) {
+          if (timer) return;
+          timer = setTimeout(() => {
+            sent = true;
+            onSeen(seen);
+          }, IMPRESSION_MS);
+        } else if (timer) {
+          clearTimeout(timer);
+          timer = null;
+        }
+      },
+      { threshold: [0, 0.35, 0.5, 1] }
+    );
+
+    io.observe(el);
+    return () => {
+      io.disconnect();
+      if (visible) onVisible?.(seen, false);
+      if (timer) clearTimeout(timer);
+    };
+  }, [item.id, item.url, onSeen, onVisible]);
+
+  return ref;
 }
 
 const BoardCard = memo(function BoardCard({
@@ -233,6 +342,8 @@ const BoardCard = memo(function BoardCard({
   saved,
   likeCount,
   onSelect,
+  onSeen,
+  onVisible,
   onToggleLike,
   onToggleSave,
 }: {
@@ -242,16 +353,21 @@ const BoardCard = memo(function BoardCard({
   saved: boolean;
   likeCount: number;
   onSelect: (id: string) => void;
+  onSeen?: (item: SeenTarget) => void;
+  onVisible?: (item: SeenTarget, visible: boolean) => void;
   onToggleLike: (item: FeedItem) => void;
   onToggleSave: (item: FeedItem) => void;
 }) {
   const chrome = sourceChrome[item.source];
   const kind = chrome.kind;
+  const articleRef = useFeedImpression(item, onSeen, onVisible);
 
   return (
     <article
+      ref={articleRef}
+      data-feed-id={item.id}
       className={clsx(
-        "glass-card mb-4 break-inside-avoid overflow-hidden rounded-[12px] transition-colors duration-100",
+        "glass-card overflow-hidden rounded-[12px] transition-colors duration-100",
         selected ? "bg-[var(--bg-active)]" : "hover:bg-[var(--bg-hover)]"
       )}
       style={{

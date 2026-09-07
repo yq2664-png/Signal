@@ -28,7 +28,7 @@ export function FeedPage() {
   const openBrief = useCallback(
     (id: string) => {
       const item = items.find((entry) => entry.id === id);
-      if (item) markSeen(item);
+      markSeen(item ?? { id, url: "" });
       setSelectedId(id);
       setBriefOpen(true);
     },
@@ -41,7 +41,9 @@ export function FeedPage() {
   }, [commitSeen, forceRefresh]);
 
   useEffect(() => {
-    if (!selectedId && pool[0]) setSelectedId(pool[0].id);
+    if (selectedId && pool.some((item) => item.id === selectedId)) return;
+    setBriefOpen(false);
+    setSelectedId(pool[0]?.id ?? "");
   }, [pool, selectedId]);
 
   const searched = useMemo(() => {
@@ -64,7 +66,6 @@ export function FeedPage() {
 
   const selected =
     filtered.find((item) => item.id === selectedId) ??
-    items.find((item) => item.id === selectedId) ??
     filtered[0] ??
     null;
 
@@ -127,6 +128,7 @@ export function FeedPage() {
             items={filtered}
             selectedId={selected?.id}
             onSelect={openBrief}
+            onSeen={markSeen}
             onRefresh={onRefresh}
             refreshing={refreshing}
             loading={

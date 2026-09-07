@@ -1,6 +1,7 @@
 import type { FeedItem } from "@/lib/types";
 
 export const SEEN_POSTS_KEY = "signal-seen-posts-v1";
+export const SEEN_PENDING_KEY = "signal-seen-posts-pending-v1";
 const MAX_SEEN = 800;
 
 export type SeenIndex = {
@@ -63,10 +64,10 @@ export function excludeSeen<T extends Pick<FeedItem, "id" | "url">>(
   return items.filter((item) => !isSeenItem(item, index));
 }
 
-export function loadSeen(): SeenIndex {
+function readIndex(key: string): SeenIndex {
   if (typeof window === "undefined") return EMPTY_SEEN;
   try {
-    const raw = localStorage.getItem(SEEN_POSTS_KEY);
+    const raw = localStorage.getItem(key);
     if (!raw) return EMPTY_SEEN;
     const parsed = JSON.parse(raw) as Partial<SeenIndex>;
     return {
@@ -78,11 +79,42 @@ export function loadSeen(): SeenIndex {
   }
 }
 
-export function saveSeen(index: SeenIndex): void {
+function writeIndex(key: string, index: SeenIndex): void {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(SEEN_POSTS_KEY, JSON.stringify(index));
+    if (index.ids.length === 0 && index.urls.length === 0) {
+      localStorage.removeItem(key);
+      return;
+    }
+    localStorage.setItem(key, JSON.stringify(index));
   } catch {
     /* quota / private mode */
   }
+}
+
+export function loadSeen(): SeenIndex {
+  return readIndex(SEEN_POSTS_KEY);
+}
+
+export function saveSeen(index: SeenIndex): void {
+  writeIndex(SEEN_POSTS_KEY, index);
+}
+
+export function loadPending(): SeenIndex {
+  return readIndex(SEEN_PENDING_KEY);
+}
+
+export function savePending(index: SeenIndex): void {
+  writeIndex(SEEN_PENDING_KEY, index);
+}
+
+/** Reload / new session: leftover pending views join the hidden pool. */
+export function hydrateSeen(): SeenIndex {
+  const committed = loadSeen();
+  const pending = loadPending();
+  if (pending.ids.length === 0 && pending.urls.length === 0) return committed;
+  const next = mergeSeen(committed, pending);
+  saveSeen(next);
+  savePending(EMPTY_SEEN);
+  return next;
 }

@@ -5,8 +5,9 @@ import {
   addSeen,
   EMPTY_SEEN,
   excludeSeen,
-  loadSeen,
+  hydrateSeen,
   mergeSeen,
+  savePending,
   saveSeen,
   type SeenIndex,
 } from "@/lib/seen-posts";
@@ -19,14 +20,16 @@ export function useSeenPosts() {
   const committedRef = useRef<SeenIndex>(EMPTY_SEEN);
 
   useEffect(() => {
-    const loaded = loadSeen();
+    const loaded = hydrateSeen();
     committedRef.current = loaded;
+    pendingRef.current = EMPTY_SEEN;
     setCommitted(loaded);
     setReady(true);
   }, []);
 
   const markSeen = useCallback((item: Pick<FeedItem, "id" | "url">) => {
     pendingRef.current = addSeen(pendingRef.current, item);
+    savePending(pendingRef.current);
   }, []);
 
   const commitSeen = useCallback(() => {
@@ -36,6 +39,7 @@ export function useSeenPosts() {
     const next = mergeSeen(committedRef.current, pending);
     committedRef.current = next;
     saveSeen(next);
+    savePending(EMPTY_SEEN);
     setCommitted(next);
   }, []);
 

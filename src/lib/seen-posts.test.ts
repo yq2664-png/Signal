@@ -1,11 +1,30 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   addSeen,
+  EMPTY_SEEN,
   excludeSeen,
+  hydrateSeen,
   isSeenItem,
+  loadPending,
+  loadSeen,
   mergeSeen,
   normalizeSeenUrl,
+  savePending,
+  saveSeen,
 } from "@/lib/seen-posts";
+
+function memoryStorage() {
+  const data = new Map<string, string>();
+  return {
+    getItem: (key: string) => data.get(key) ?? null,
+    setItem: (key: string, value: string) => {
+      data.set(key, value);
+    },
+    removeItem: (key: string) => {
+      data.delete(key);
+    },
+  };
+}
 
 describe("seen posts", () => {
   it("treats www and trailing slash as the same URL", () => {
@@ -61,5 +80,65 @@ describe("seen posts", () => {
         merged
       ).map((item) => item.id)
     ).toEqual(["c"]);
+  });
+
+  it("hides a card recorded by id when the url is missing", () => {
+    const viewed = { id: "gpt-6-astra", url: "" };
+    const other = { id: "other", url: "https://example.com/other" };
+    const committed = addSeen(EMPTY_SEEN, viewed);
+    expect(excludeSeen([viewed, other], committed).map((item) => item.id)).toEqual(
+      ["other"]
+    );
+  });
+});
+
+describe("hydrateSeen", () => {
+  beforeEach(() => {
+    const storage = memoryStorage();
+    vi.stubGlobal("localStorage", storage);
+    vi.stubGlobal("window", { localStorage: storage });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("commits leftover pending views so a page reload hides them", () => {
+    const viewed = {
+      id: "gpt-6-astra",
+      url: "https://openai.com/index/gpt-6-astra",
+    };
+    const other = { id: "other", url: "https://example.com/other" };
+    savePending(addSeen(EMPTY_SEEN, viewed));
+
+    const committed = hydrateSeen();
+
+    expect(isSeenItem(viewed, committed)).toBe(true);
+    expect(loadPending()).toEqual(EMPTY_SEEN);
+    expect(loadSeen().ids).toContain("gpt-6-astra");
+    expect(
+      excludeSeen([viewed, other], committed).map((item) => item.id)
+    ).toEqual(["other"]);
+  });
+
+  it("keeps already-committed views when pending is empty", () => {
+    const viewed = { id: "kimi-k25", url: "https://kimi.com/blog/kimi-k2-5" };
+    saveSeen(addSeen(EMPTY_SEEN, viewed));
+
+    const committed = hydrateSeen();
+
+    expect(isSeenItem(viewed, committed)).toBe(true);
+    expect(loadPending()).toEqual(EMPTY_SEEN);
+  });
+
+  it("hides viewport-flushed cards after they are committed", () => {
+    const visible = { id: "on-screen", url: "https://example.com/on-screen" };
+    const next = { id: "unseen", url: "https://example.com/unseen" };
+    const pending = addSeen(EMPTY_SEEN, visible);
+    const committed = mergeSeen(EMPTY_SEEN, pending);
+
+    expect(excludeSeen([visible, next], committed).map((item) => item.id)).toEqual(
+      ["unseen"]
+    );
   });
 });
