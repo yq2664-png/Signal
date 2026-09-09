@@ -15,7 +15,6 @@ import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { useToast } from "@/components/ui/Toast";
 import { timeoutAfter } from "@/lib/timeout";
-import { sendEmailSignIn } from "@/lib/supabase/email-sign-in";
 
 export type AuthUser = {
   id: string;
@@ -33,7 +32,6 @@ type AuthContextValue = {
   closeAuth: () => void;
   authMessage: string | null;
   signInWithGoogle: () => Promise<{ ok: boolean; message: string }>;
-  signInWithEmail: (email: string) => Promise<{ ok: boolean; message: string }>;
   logout: () => Promise<void>;
   refreshAuth: () => Promise<void>;
   setPrefs: (prefs: UserPrefs | null) => void;
@@ -267,11 +265,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { ok: true, message: "Redirecting to Google…" };
   }, [configured]);
 
-  const signInWithEmail = useCallback(async (email: string) => {
-    if (!configured) return { ok: false, message: "Sign-in is currently unavailable." };
-    return sendEmailSignIn(createClient(), email, window.location.origin);
-  }, [configured]);
-
   const logout = useCallback(async () => {
     if (!configured) return;
     const supabase = createClient();
@@ -294,7 +287,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       closeAuth,
       authMessage,
       signInWithGoogle,
-      signInWithEmail,
       logout,
       refreshAuth,
       setPrefs,
@@ -312,7 +304,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       closeAuth,
       authMessage,
       signInWithGoogle,
-      signInWithEmail,
       logout,
       refreshAuth,
       requireAuth,
