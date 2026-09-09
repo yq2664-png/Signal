@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Search } from "lucide-react";
 import { FeedFilters, defaultFilters, type FeedFiltersState } from "@/components/feed/FeedFilters";
 import { ImpactBriefDrawer } from "@/components/feed/ImpactBriefDrawer";
@@ -10,11 +10,15 @@ import { Button } from "@/components/ui/Button";
 import { useFeed } from "@/context/FeedContext";
 import { useSeenPosts } from "@/context/useSeenPosts";
 import { groupIdForItem, type SourceGroupId } from "@/lib/source-groups";
-import { prioritizeUnread } from "@/lib/seen-posts";
+import { isSeenItem, prioritizeUnread } from "@/lib/seen-posts";
+import { useToast } from "@/components/ui/Toast";
+import type { FeedItem } from "@/lib/types";
 
 export function FeedPage() {
   const { items, loading, refreshing, error, meta, forceRefresh } = useFeed();
   const { markSeen, commitSeen, committed, ready } = useSeenPosts();
+  const { toast } = useToast();
+  const readNoticeShown = useRef(false);
   const [filters, setFilters] = useState<FeedFiltersState>(defaultFilters);
   const [groupFilter, setGroupFilter] = useState<SourceGroupId | "all">("all");
   const [toolsOpen, setToolsOpen] = useState(false);
@@ -37,6 +41,7 @@ export function FeedPage() {
   );
 
   const onRefresh = useCallback(() => {
+    readNoticeShown.current = false;
     commitSeen();
     forceRefresh();
   }, [commitSeen, forceRefresh]);
@@ -58,12 +63,20 @@ export function FeedPage() {
     });
   }, [filters.query, pool]);
 
-  const { items: filtered, caughtUp } = useMemo(() => {
+  const { items: filtered } = useMemo(() => {
     const matching = groupFilter === "all" ? searched : searched.filter(
       (item) => groupIdForItem(item) === groupFilter
     );
     return prioritizeUnread(matching, committed);
   }, [groupFilter, searched, committed]);
+
+  const onPostSeen = useCallback((item: Pick<FeedItem, "id" | "url">) => {
+    markSeen(item);
+    if (!readNoticeShown.current && isSeenItem(item, committed)) {
+      readNoticeShown.current = true;
+      toast("You’re caught up. You’re now browsing previously viewed posts.");
+    }
+  }, [markSeen, committed, toast]);
 
   const selected =
     filtered.find((item) => item.id === selectedId) ??
@@ -124,17 +137,12 @@ export function FeedPage() {
             resultCount={filtered.length}
           />
         ) : null}
-        {caughtUp && !loading && !refreshing ? (
-          <p role="status" className="shrink-0 px-4 py-2 text-[12px] text-[var(--text-muted)]">
-            You’re caught up. Showing previously viewed posts. Pull to refresh for new updates.
-          </p>
-        ) : null}
         <div className="min-h-0 flex-1">
           <SourceBoard
             items={filtered}
             selectedId={selected?.id}
             onSelect={openBrief}
-            onSeen={markSeen}
+            onSeen={onPostSeen}
             onRefresh={onRefresh}
             refreshing={refreshing}
             loading={
