@@ -15,6 +15,7 @@ import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { useToast } from "@/components/ui/Toast";
 import { timeoutAfter } from "@/lib/timeout";
+import { sendEmailSignIn } from "@/lib/supabase/email-sign-in";
 
 export type AuthUser = {
   id: string;
@@ -32,6 +33,7 @@ type AuthContextValue = {
   closeAuth: () => void;
   authMessage: string | null;
   signInWithGoogle: () => Promise<{ ok: boolean; message: string }>;
+  signInWithEmail: (email: string) => Promise<{ ok: boolean; message: string }>;
   logout: () => Promise<void>;
   refreshAuth: () => Promise<void>;
   setPrefs: (prefs: UserPrefs | null) => void;
@@ -130,14 +132,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!configured) return;
 
     const supabase = createClient();
+    let libraryTimer: ReturnType<typeof setTimeout> | undefined;
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       const next = session?.user
         ? toAuthUser(session.user.id, session.user.email ?? undefined)
         : null;
       setUser((prev) => (sameUser(prev, next) ? prev : next));
-      if (next) await hydrateLibrary();
+      clearTimeout(libraryTimer);
+      // Auth notifications run under the session lock. Start additional
+      // Supabase requests only after this callback has returned.
+      if (next) libraryTimer = setTimeout(() => {
+        void hydrateLibrary().catch((err) => console.error("[auth] library refresh", err));
+      }, 0);
       else {
         setPrefs(null);
         setCounts({ likes: 0, saves: 0 });
@@ -145,7 +153,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setReady(true);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      clearTimeout(libraryTimer);
+      subscription.unsubscribe();
+    };
   }, [configured, refreshAuth, hydrateLibrary]);
 
   useEffect(() => {
@@ -162,7 +173,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (auth === "expired") {
       toast("Sign-in failed or expired. Try again.", "error");
       setAuthOpen(true);
-      setAuthMessage("Google sign-in failed or expired. Try again.");
+      setAuthMessage("Sign-in failed or expired. Try again.");
       return;
     }
 
@@ -187,12 +198,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setAuthOpen(false);
       } else {
         toast(
-          "Signed in with Google, but the session did not stick. Try again.",
+          "The sign-in session could not be loaded. Try again.",
           "error"
         );
         setAuthOpen(true);
         setAuthMessage(
-          "Session cookie was missing after Google sign-in. Try Continue with Google again."
+          "Your sign-in session could not be loaded. Please sign in again."
         );
       }
     })();
@@ -216,7 +227,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return false;
       }
       if (user) return true;
-      openAuth(message ?? "Sign in with Google to like and save items.");
+      openAuth(message ?? "Sign in to like and save items.");
       return false;
     },
     [configured, user, openAuth]
@@ -256,6 +267,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { ok: true, message: "Redirecting to Google…" };
   }, [configured]);
 
+  const signInWithEmail = useCallback(async (email: string) => {
+    if (!configured) return { ok: false, message: "Sign-in is currently unavailable." };
+    return sendEmailSignIn(createClient(), email, window.location.origin);
+  }, [configured]);
+
   const logout = useCallback(async () => {
     if (!configured) return;
     const supabase = createClient();
@@ -278,6 +294,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       closeAuth,
       authMessage,
       signInWithGoogle,
+      signInWithEmail,
       logout,
       refreshAuth,
       setPrefs,
@@ -295,6 +312,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       closeAuth,
       authMessage,
       signInWithGoogle,
+      signInWithEmail,
       logout,
       refreshAuth,
       requireAuth,

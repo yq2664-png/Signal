@@ -1,33 +1,60 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { X } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 export function AuthModal() {
+  const { authOpen } = useAuth();
+  return authOpen ? <AuthModalContent /> : null;
+}
+
+function AuthModalContent() {
   const {
-    authOpen,
     closeAuth,
     authMessage,
     signInWithGoogle,
+    signInWithEmail,
     configured,
   } = useAuth();
   const [status, setStatus] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-
-  if (!authOpen) return null;
+  const [busy, setBusy] = useState<"google" | "email" | null>(null);
+  const [email, setEmail] = useState("");
+  const [sentTo, setSentTo] = useState<string | null>(null);
+  useEffect(() => {
+    if (!sentTo) return;
+    const timer = setTimeout(() => setSentTo(null), 60_000);
+    return () => clearTimeout(timer);
+  }, [sentTo]);
 
   const onGoogle = async () => {
-    setBusy(true);
+    if (busy) return;
+    setBusy("google");
     setStatus(null);
-    const result = await signInWithGoogle();
-    if (!result.ok) {
+    try {
+      const result = await signInWithGoogle();
       setStatus(result.message);
-      setBusy(false);
-      return;
+      if (!result.ok) setBusy(null);
+    } catch {
+      setStatus("Could not connect to Google. Please try again.");
+      setBusy(null);
     }
-    setStatus(result.message);
-    // Browser navigates away to Google; keep busy state
+  };
+
+  const onEmail = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (busy) return;
+    setBusy("email");
+    setStatus(null);
+    try {
+      const result = await signInWithEmail(email);
+      setStatus(result.message);
+      if (result.ok) setSentTo(email.trim());
+    } catch {
+      setStatus("Could not send the sign-in link. Please try again.");
+    } finally {
+      setBusy(null);
+    }
   };
 
   return (
@@ -36,17 +63,20 @@ export function AuthModal() {
       onClick={closeAuth}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="sign-in-title"
         className="w-full max-w-md rounded-[12px] bg-[var(--bg-elevated)] p-5"
         style={{ boxShadow: "rgb(35,37,42) 0px 0px 0px 1px inset" }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-[16px] font-semibold tracking-[-0.01em] text-[var(--text-primary)]">
-              Sign in with Google
+            <h2 id="sign-in-title" className="text-[16px] font-semibold tracking-[-0.01em] text-[var(--text-primary)]">
+              Sign in
             </h2>
             <p className="mt-1 text-[13px] leading-5 text-[var(--text-secondary)]">
-              Sync likes and saves to your Google account.
+              Sign in to sync your likes and saves.
             </p>
           </div>
           <button
@@ -67,23 +97,58 @@ export function AuthModal() {
 
         {!configured ? (
           <p className="rounded-[6px] bg-[var(--bg-overlay)] px-3 py-2 text-[12px] leading-5 text-[var(--text-body)]">
-            Add Supabase env vars on Railway, enable the Google provider, then
-            redeploy.
+            Sign-in is currently unavailable. Please try again later.
           </p>
         ) : (
+          <>
           <button
             type="button"
-            disabled={busy}
+            disabled={busy !== null}
             onClick={() => void onGoogle()}
             className="flex w-full items-center justify-center gap-2 rounded-[6px] bg-[var(--cta)] px-3 py-2.5 text-[13px] font-semibold text-[var(--cta-text)] disabled:opacity-60"
           >
             <GoogleMark />
-            {busy ? "Redirecting…" : "Continue with Google"}
+            {busy === "google" ? "Redirecting…" : "Continue with Google"}
           </button>
+
+          <div className="my-5 flex items-center gap-3 text-[12px] text-[var(--text-muted)]">
+            <span className="h-px flex-1 bg-[var(--bg-overlay)]" />
+            <span>or</span>
+            <span className="h-px flex-1 bg-[var(--bg-overlay)]" />
+          </div>
+
+          <form onSubmit={(event) => void onEmail(event)}>
+            <label htmlFor="sign-in-email" className="mb-2 block text-[13px] text-[var(--text-primary)]">
+              Email address
+            </label>
+            <input
+              id="sign-in-email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              disabled={busy !== null}
+              onChange={(event) => { setEmail(event.target.value); setStatus(null); }}
+              placeholder="you@example.com"
+              className="w-full rounded-[6px] border border-[var(--bg-overlay)] bg-[var(--bg)] px-3 py-2.5 text-[13px] text-[var(--text-primary)] outline-none focus:border-[var(--cta)] disabled:opacity-60"
+            />
+            <p className="mt-2 text-[12px] leading-5 text-[var(--text-muted)]">
+              We’ll email you a sign-in link. No password needed.
+            </p>
+            <button
+              type="submit"
+              disabled={busy !== null || !email.trim() || sentTo === email.trim()}
+              className="mt-3 w-full rounded-[6px] bg-[var(--bg-overlay)] px-3 py-2.5 text-[13px] font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-hover)] disabled:opacity-60"
+            >
+              {busy === "email" ? "Sending…" : sentTo === email.trim() ? "Link sent — check your inbox" : "Continue with email"}
+            </button>
+          </form>
+          </>
         )}
 
         {status ? (
-          <p className="mt-3 text-[12px] leading-5 text-[var(--text-secondary)]">
+          <p role="status" aria-live="polite" className="mt-3 text-[12px] leading-5 text-[var(--text-secondary)]">
             {status}
           </p>
         ) : null}

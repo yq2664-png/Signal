@@ -4,17 +4,30 @@ import { getSupabasePublicEnv } from "@/lib/supabase/env";
 import { timeoutAfter } from "@/lib/timeout";
 
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
   const err =
     searchParams.get("error_description") || searchParams.get("error");
   const next = searchParams.get("next") ?? "/feed";
-  const safeNext = next.startsWith("/") ? next : "/feed";
-  const join = safeNext.includes("?") ? "&" : "?";
+  const base = "https://callback.invalid";
+  let safeNext = new URL("/feed", base);
+  try {
+    const destination = new URL(next, base);
+    if (next.startsWith("/") && destination.origin === base) safeNext = destination;
+  } catch {
+    // Malformed return paths fall back to the feed.
+  }
   const { url, anonKey } = getSupabasePublicEnv();
 
-  const redirect = (ok: boolean) =>
-    NextResponse.redirect(`${origin}${safeNext}${join}auth=${ok ? "ok" : "expired"}`);
+  const redirect = (ok: boolean) => {
+    safeNext.searchParams.set("auth", ok ? "ok" : "expired");
+    // A relative Location keeps the browser's public origin. Behind Railway's
+    // proxy, request.url can contain the internal 0.0.0.0 listener instead.
+    return new NextResponse(null, {
+      status: 307,
+      headers: { Location: `${safeNext.pathname}${safeNext.search}${safeNext.hash}` },
+    });
+  };
 
   if (!url || !anonKey || err || !code) {
     return redirect(false);
