@@ -11,6 +11,7 @@ import {
   normalizeSeenUrl,
   savePending,
   saveSeen,
+  unreadOrAvailable,
 } from "@/lib/seen-posts";
 
 function memoryStorage() {
@@ -27,6 +28,27 @@ function memoryStorage() {
 }
 
 describe("seen posts", () => {
+  it("restores available posts when persisted reading history hides everything", () => {
+    const storage = memoryStorage();
+    vi.stubGlobal("localStorage", storage);
+    vi.stubGlobal("window", { localStorage: storage });
+    try {
+      const posts = [{ id: "read", url: "https://example.com/read" }];
+      savePending(addSeen(EMPTY_SEEN, posts[0]));
+      const reloaded = hydrateSeen();
+      expect(unreadOrAvailable(posts, reloaded)).toEqual({ items: posts, caughtUp: true });
+      expect(unreadOrAvailable(posts, hydrateSeen())).toEqual({ items: posts, caughtUp: true });
+      const fresh = { id: "new", url: "https://example.com/new" };
+      expect(unreadOrAvailable([...posts, fresh], reloaded)).toEqual({ items: [fresh], caughtUp: false });
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("does not label empty search results as caught up", () => {
+    expect(unreadOrAvailable([], EMPTY_SEEN)).toEqual({ items: [], caughtUp: false });
+  });
+
   it("treats www and trailing slash as the same URL", () => {
     expect(normalizeSeenUrl("https://www.kimi.com/blog/kimi-k3/")).toBe(
       normalizeSeenUrl("https://kimi.com/blog/kimi-k3")

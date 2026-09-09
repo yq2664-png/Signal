@@ -10,10 +10,11 @@ import { Button } from "@/components/ui/Button";
 import { useFeed } from "@/context/FeedContext";
 import { useSeenPosts } from "@/context/useSeenPosts";
 import { groupIdForItem, type SourceGroupId } from "@/lib/source-groups";
+import { unreadOrAvailable } from "@/lib/seen-posts";
 
 export function FeedPage() {
   const { items, loading, refreshing, error, meta, forceRefresh } = useFeed();
-  const { markSeen, commitSeen, hideSeen, ready } = useSeenPosts();
+  const { markSeen, commitSeen, committed, ready } = useSeenPosts();
   const [filters, setFilters] = useState<FeedFiltersState>(defaultFilters);
   const [groupFilter, setGroupFilter] = useState<SourceGroupId | "all">("all");
   const [toolsOpen, setToolsOpen] = useState(false);
@@ -21,8 +22,8 @@ export function FeedPage() {
   const [briefOpen, setBriefOpen] = useState(false);
 
   const pool = useMemo(
-    () => (ready ? hideSeen(items) : []),
-    [hideSeen, items, ready]
+    () => (ready ? items.filter((item) => item.title.trim()) : []),
+    [items, ready]
   );
 
   const openBrief = useCallback(
@@ -57,12 +58,12 @@ export function FeedPage() {
     });
   }, [filters.query, pool]);
 
-  const filtered = useMemo(() => {
-    if (groupFilter === "all") return searched;
-    return searched.filter(
+  const { items: filtered, caughtUp } = useMemo(() => {
+    const matching = groupFilter === "all" ? searched : searched.filter(
       (item) => groupIdForItem(item) === groupFilter
     );
-  }, [groupFilter, searched]);
+    return unreadOrAvailable(matching, committed);
+  }, [groupFilter, searched, committed]);
 
   const selected =
     filtered.find((item) => item.id === selectedId) ??
@@ -122,6 +123,11 @@ export function FeedPage() {
             onChange={setFilters}
             resultCount={filtered.length}
           />
+        ) : null}
+        {caughtUp && !loading && !refreshing ? (
+          <p role="status" className="shrink-0 px-4 py-2 text-[12px] text-[var(--text-muted)]">
+            You’re caught up. Showing previously viewed posts. Pull to refresh for new updates.
+          </p>
         ) : null}
         <div className="min-h-0 flex-1">
           <SourceBoard
