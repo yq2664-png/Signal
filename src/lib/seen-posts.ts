@@ -64,14 +64,18 @@ export function excludeSeen<T extends Pick<FeedItem, "id" | "url">>(
   return items.filter((item) => !isSeenItem(item, index));
 }
 
-/** Keep the feed usable after the available unread posts have been exhausted. */
-export function unreadOrAvailable<T extends Pick<FeedItem, "id" | "url">>(
+/** Stable unread-first ordering without removing available posts. */
+export function prioritizeUnread<T extends Pick<FeedItem, "id" | "url">>(
   items: T[],
   index: SeenIndex
 ): { items: T[]; caughtUp: boolean } {
-  const unread = excludeSeen(items, index);
+  const unread: T[] = [];
+  const read: T[] = [];
+  for (const item of items) {
+    (isSeenItem(item, index) ? read : unread).push(item);
+  }
   const caughtUp = items.length > 0 && unread.length === 0;
-  return { items: caughtUp ? items : unread, caughtUp };
+  return { items: [...unread, ...read], caughtUp };
 }
 
 function readIndex(key: string): SeenIndex {

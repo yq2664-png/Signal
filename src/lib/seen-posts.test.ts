@@ -11,7 +11,7 @@ import {
   normalizeSeenUrl,
   savePending,
   saveSeen,
-  unreadOrAvailable,
+  prioritizeUnread,
 } from "@/lib/seen-posts";
 
 function memoryStorage() {
@@ -28,6 +28,18 @@ function memoryStorage() {
 }
 
 describe("seen posts", () => {
+  it("keeps all 189 posts when only five are unread, preserving order in each group", () => {
+    const posts = Array.from({ length: 189 }, (_, i) => ({
+      id: String(i), url: `https://example.com/${i}`,
+    }));
+    const history = posts.slice(0, 184).reduce(addSeen, EMPTY_SEEN);
+    const result = prioritizeUnread(posts, history);
+    expect(result.items).toHaveLength(189);
+    expect(result.items).toEqual([...posts.slice(184), ...posts.slice(0, 184)]);
+    expect(result.caughtUp).toBe(false);
+    expect(prioritizeUnread(posts, posts.reduce(addSeen, history)).items).toEqual(posts);
+  });
+
   it("restores available posts when persisted reading history hides everything", () => {
     const storage = memoryStorage();
     vi.stubGlobal("localStorage", storage);
@@ -36,17 +48,17 @@ describe("seen posts", () => {
       const posts = [{ id: "read", url: "https://example.com/read" }];
       savePending(addSeen(EMPTY_SEEN, posts[0]));
       const reloaded = hydrateSeen();
-      expect(unreadOrAvailable(posts, reloaded)).toEqual({ items: posts, caughtUp: true });
-      expect(unreadOrAvailable(posts, hydrateSeen())).toEqual({ items: posts, caughtUp: true });
+      expect(prioritizeUnread(posts, reloaded)).toEqual({ items: posts, caughtUp: true });
+      expect(prioritizeUnread(posts, hydrateSeen())).toEqual({ items: posts, caughtUp: true });
       const fresh = { id: "new", url: "https://example.com/new" };
-      expect(unreadOrAvailable([...posts, fresh], reloaded)).toEqual({ items: [fresh], caughtUp: false });
+      expect(prioritizeUnread([...posts, fresh], reloaded)).toEqual({ items: [fresh, ...posts], caughtUp: false });
     } finally {
       vi.unstubAllGlobals();
     }
   });
 
   it("does not label empty search results as caught up", () => {
-    expect(unreadOrAvailable([], EMPTY_SEEN)).toEqual({ items: [], caughtUp: false });
+    expect(prioritizeUnread([], EMPTY_SEEN)).toEqual({ items: [], caughtUp: false });
   });
 
   it("treats www and trailing slash as the same URL", () => {

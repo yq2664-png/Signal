@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { useFeed } from "@/context/FeedContext";
 import { useSeenPosts } from "@/context/useSeenPosts";
 import { groupIdForItem, type SourceGroupId } from "@/lib/source-groups";
-import { unreadOrAvailable } from "@/lib/seen-posts";
+import { prioritizeUnread } from "@/lib/seen-posts";
 
 export function FeedPage() {
   const { items, loading, refreshing, error, meta, forceRefresh } = useFeed();
@@ -62,7 +62,7 @@ export function FeedPage() {
     const matching = groupFilter === "all" ? searched : searched.filter(
       (item) => groupIdForItem(item) === groupFilter
     );
-    return unreadOrAvailable(matching, committed);
+    return prioritizeUnread(matching, committed);
   }, [groupFilter, searched, committed]);
 
   const selected =
