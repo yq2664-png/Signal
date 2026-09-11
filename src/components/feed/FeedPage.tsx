@@ -1,4 +1,5 @@
 "use client";
+import { useLanguage } from "@/context/LanguageContext";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Search } from "lucide-react";
@@ -13,6 +14,7 @@ import { groupIdForItem, type SourceGroupId } from "@/lib/source-groups";
 import { prioritizeUnread } from "@/lib/seen-posts";
 
 export function FeedPage() {
+  const { t, locale, localize } = useLanguage();
   const { items, loading, refreshing, error, meta, forceRefresh } = useFeed();
   const { markSeen, commitSeen, committed, ready } = useSeenPosts();
   const [filters, setFilters] = useState<FeedFiltersState>(defaultFilters);
@@ -51,12 +53,12 @@ export function FeedPage() {
     const q = filters.query.trim().toLowerCase();
     if (!q) return pool;
     return pool.filter((item) => {
-      const hay = [item.title, item.summary, item.source]
+      const hay = [item.title, item.summary, localize(item).title, localize(item).summary, item.source]
         .join(" ")
         .toLowerCase();
       return hay.includes(q);
     });
-  }, [filters.query, pool]);
+  }, [filters.query, pool, localize]);
 
   const { items: filtered } = useMemo(() => {
     const matching = groupFilter === "all" ? searched : searched.filter(
@@ -85,24 +87,24 @@ export function FeedPage() {
 
   return (
     <AppShell
-      title="Feed"
-      subtitle="What matters in AI today"
+      title={t("Feed")}
+      subtitle={t("What matters in AI today")}
       actions={
         <Button
           variant="ghost"
           active={toolsOpen}
           aria-expanded={toolsOpen}
-          aria-label={toolsOpen ? "Hide search and filters" : "Show search and filters"}
+          aria-label={t(toolsOpen ? "Hide search and filters" : "Show search and filters")}
           onClick={() => setToolsOpen((open) => !open)}
         >
           <Search className="h-3.5 w-3.5" strokeWidth={1.75} />
-          {toolsOpen ? "Close" : "Search"}
+          {t(toolsOpen ? "Close" : "Search")}
         </Button>
       }
     >
       {error ? (
         <div className="border-b border-[var(--border)] bg-[rgba(255,80,80,0.08)] px-4 py-2 text-[12px] text-[var(--text-secondary)]">
-          Live fetch issue: {error}. Showing available items.
+          {locale === "zh" ? "动态更新失败，先显示已有内容。" : `Live fetch issue: ${error}. Showing available items.`}
         </div>
       ) : null}
 

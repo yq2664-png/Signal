@@ -58,3 +58,11 @@ Set `OPENAI_API_KEY` in `.env.local` to enable AI scoring + Impact Briefs (`gpt-
 - Role-based AI Perspective
 - Personalized AI Radar
 - AI skill gap analysis
+
+## Chinese / English
+
+The header switch changes interface language without navigation. The first visit follows the browser language; subsequent visits use the saved `signal-language` preference. Post identity, likes, saves and reading history are shared across languages.
+
+Chinese titles and summaries are generated on demand by `/api/feed/translations` using `OPENAI_API_KEY`. `OPENAI_TRANSLATION_MODEL` overrides the translation model, otherwise `OPENAI_MODEL` or `gpt-4o-mini` is used. This sends public feed titles/summaries to OpenAI and incurs API usage. Full Impact Brief bodies remain in their original language in this release.
+
+Translations are cached by source content in `CACHE_DIR/feed-translations-zh-v1.json` (default `.cache`). Mount a persistent volume for reuse across deployments. One worker translates batches of 10; failures back off for five minutes and leave original text visible. English mode never requests translations. Saved posts outside the current feed fall back to their original text.

@@ -1,4 +1,5 @@
 "use client";
+import { useLanguage } from "@/context/LanguageContext";
 
 import { clsx } from "clsx";
 import {
@@ -48,12 +49,13 @@ function PublishedLabel({
   prefix?: string;
   suffix?: string;
 }) {
-  const label = formatRelative(at);
+  const { t, locale } = useLanguage();
+  const label = formatRelative(at, locale);
   if (!label) return null;
   return (
     <span className={className}>
       {prefix}
-      {label}
+      {t(label)}
       {suffix}
     </span>
   );
@@ -68,6 +70,7 @@ export function SourceGroupChips({
   onChange: (id: SourceGroupId | "all") => void;
   counts: Record<SourceGroupId | "all", number>;
 }) {
+  const { t } = useLanguage();
   const chips: { id: SourceGroupId | "all"; label: string }[] = [
     { id: "all", label: "All" },
     ...sourceGroups.map((group) => ({
@@ -94,7 +97,7 @@ export function SourceGroupChips({
             transitionTimingFunction: "cubic-bezier(0.25, 0.46, 0.45, 0.94)",
           }}
         >
-          {chip.label}
+          {t(chip.label)}
           <span className="mono ml-1.5 text-[10px] opacity-70">
             {counts[chip.id] ?? 0}
           </span>
@@ -123,6 +126,7 @@ export function SourceBoard({
   loading?: boolean;
   emptyMessage?: string;
 }) {
+  const { t } = useLanguage();
   const { isLiked, toggleLike, getLikes } = useLikes();
   const { isBookmarked, toggleBookmark } = useBookmarks();
   const columnCount = useBoardColumnCount();
@@ -150,7 +154,7 @@ export function SourceBoard({
     </BoardFrame>
   ) : renderable.length === 0 ? (
     <div className="flex min-h-full items-center justify-center p-8">
-      <p className="text-[13px] text-[var(--text-muted)]">{emptyMessage}</p>
+      <p className="text-[13px] text-[var(--text-muted)]">{t(emptyMessage)}</p>
     </div>
   ) : (
     <BoardFrame columnCount={columnCount}>
@@ -196,6 +200,7 @@ function BoardFrame({
   busy?: boolean;
   columnCount: number;
 }) {
+
   const columns = splitIntoColumns(Children.toArray(children), columnCount);
   return (
     <div
@@ -358,6 +363,8 @@ const BoardCard = memo(function BoardCard({
   onToggleLike: (item: FeedItem) => void;
   onToggleSave: (item: FeedItem) => void;
 }) {
+  const { t, localize } = useLanguage();
+  const displayItem = localize(item);
   const chrome = sourceChrome[item.source];
   const kind = chrome.kind;
   const articleRef = useFeedImpression(item, onSeen, onVisible);
@@ -386,7 +393,7 @@ const BoardCard = memo(function BoardCard({
         </span>
         <button
           type="button"
-          aria-label={liked ? "Unlike" : "Like"}
+          aria-label={t(liked ? "Unlike" : "Like")}
           aria-pressed={liked}
           onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => {
@@ -420,7 +427,7 @@ const BoardCard = memo(function BoardCard({
         </button>
         <button
           type="button"
-          aria-label={saved ? "Unsave" : "Save"}
+          aria-label={t(saved ? "Unsave" : "Save")}
           aria-pressed={saved}
           onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => {
@@ -459,19 +466,19 @@ const BoardCard = memo(function BoardCard({
         className="w-full cursor-pointer px-3.5 pt-1 pb-3 text-left"
       >
         {kind === "tweet" ? (
-          <TweetCard item={item} />
+          <TweetCard item={displayItem} />
         ) : kind === "youtube" ? (
-          <YouTubeCard item={item} accent={chrome.accent} />
+          <YouTubeCard item={displayItem} accent={chrome.accent} />
         ) : kind === "paper" ? (
-          <PaperCard item={item} accent={chrome.accent} />
+          <PaperCard item={displayItem} accent={chrome.accent} />
         ) : kind === "forum" ? (
-          <ForumCard item={item} accent={chrome.accent} />
+          <ForumCard item={displayItem} accent={chrome.accent} />
         ) : kind === "repo" ? (
-          <RepoCard item={item} />
+          <RepoCard item={displayItem} />
         ) : kind === "press" || kind === "blog" ? (
-          <NewsCard item={item} accent={chrome.accent} />
+          <NewsCard item={displayItem} accent={chrome.accent} />
         ) : (
-          <LabCard item={item} />
+          <LabCard item={displayItem} />
         )}
       </div>
     </article>
@@ -529,6 +536,7 @@ function NewsCard({
   item: FeedItem;
   accent: string;
 }) {
+  const { locale } = useLanguage();
   return (
     <div>
       <SafeImage
@@ -560,7 +568,7 @@ function NewsCard({
           <span className="text-[var(--text-muted)]">·</span>
         ) : null}
         <span className="text-[var(--text-muted)]">
-          {item.readingTimeMin} min read
+          {item.readingTimeMin} {locale === "zh" ? "分钟阅读" : "min read"}
         </span>
       </div>
     </div>
@@ -605,6 +613,7 @@ function YouTubeCard({
   item: FeedItem;
   accent: string;
 }) {
+  const { locale } = useLanguage();
   const channel =
     item.native?.authorName ||
     item.native?.subtitle ||
@@ -637,7 +646,7 @@ function YouTubeCard({
       </h3>
       <div className="mt-1 text-[11px] text-[var(--text-muted)]">
         {channel}
-        {views != null ? ` · ${formatCount(views)} views` : null}
+        {views != null ? ` · ${formatCount(views)} ${locale === "zh" ? "次观看" : "views"}` : null}
         {duration && !item.imageUrl ? ` · ${duration}` : null}
         <PublishedLabel at={item.publishedAt} prefix=" · " />
       </div>
@@ -674,6 +683,7 @@ function PaperCard({
   item: FeedItem;
   accent: string;
 }) {
+  const { t } = useLanguage();
   const chips = paperFieldChips(item);
   const label = chips[0] || "Paper";
   return (
@@ -705,7 +715,7 @@ function PaperCard({
             className="rounded-[4px] px-1.5 py-0.5 font-medium"
             style={{ background: `${accent}22`, color: accent }}
           >
-            {label}
+            {t(label)}
           </span>
         )}
         {item.native?.authorName ? (

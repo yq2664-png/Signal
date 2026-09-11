@@ -6,25 +6,25 @@ import {
 } from "@/lib/personalization";
 import { isVerifiedPublishedAt } from "@/lib/live/source-date";
 
-export function formatDate(iso: string): string {
+export function formatDate(iso: string, locale: "en" | "zh" = "en"): string {
   const date = new Date(iso);
-  return date.toLocaleDateString("en-US", {
+  return date.toLocaleDateString(locale === "zh" ? "zh-CN" : "en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
   });
 }
 
-export function formatRelative(iso?: string): string {
+export function formatRelative(iso?: string, locale: "en" | "zh" = "en"): string {
   if (!isVerifiedPublishedAt(iso)) return "";
   const date = new Date(iso!);
   const diffMs = Date.now() - date.getTime();
   const hours = Math.floor(diffMs / (1000 * 60 * 60));
-  if (hours < 1) return "Just now";
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 1) return locale === "zh" ? "刚刚" : "Just now";
+  if (hours < 24) return locale === "zh" ? `${hours} 小时前` : `${hours}h ago`;
   const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d ago`;
-  return formatDate(iso!);
+  if (days < 7) return locale === "zh" ? `${days} 天前` : `${days}d ago`;
+  return formatDate(iso!, locale);
 }
 
 export function compositeScore(scores: Scores): number {

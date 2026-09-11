@@ -6,6 +6,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { BookmarksProvider } from "@/context/BookmarksContext";
 import { FeedProvider } from "@/context/FeedContext";
 import { LikesProvider } from "@/context/LikesContext";
+import { LanguageProvider } from "@/context/LanguageContext";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -35,18 +36,20 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-[var(--bg)] text-[var(--text-primary)]">
-        <ToastProvider>
-          <AuthProvider>
-            <FeedProvider>
-              <LikesProvider>
-                <BookmarksProvider>
-                  {children}
-                  <AuthModal />
-                </BookmarksProvider>
-              </LikesProvider>
-            </FeedProvider>
-          </AuthProvider>
-        </ToastProvider>
+        <LanguageProvider>
+          <ToastProvider>
+            <AuthProvider>
+              <FeedProvider>
+                <LikesProvider>
+                  <BookmarksProvider>
+                    {children}
+                    <AuthModal />
+                  </BookmarksProvider>
+                </LikesProvider>
+              </FeedProvider>
+            </AuthProvider>
+          </ToastProvider>
+        </LanguageProvider>
       </body>
     </html>
   );

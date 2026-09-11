@@ -1,4 +1,5 @@
 "use client";
+import { useLanguage } from "@/context/LanguageContext";
 
 import {
   useCallback,
@@ -67,6 +68,7 @@ export function ImpactBriefDrawer({
   item: FeedItem;
   onClose: () => void;
 }) {
+  const { t } = useLanguage();
   const rootRef = useRef<HTMLDivElement>(null);
   const [containerW, setContainerW] = useState(DEFAULT_W + 48);
   const [width, setWidth] = useState(DEFAULT_W);
@@ -262,7 +264,7 @@ export function ImpactBriefDrawer({
     <div ref={rootRef} className="pointer-events-none absolute inset-0 z-10">
       <button
         type="button"
-        aria-label="Close brief backdrop"
+        aria-label={t("Close brief backdrop")}
         className="pointer-events-auto absolute inset-0 bg-black/40 lg:bg-black/25"
         onPointerDown={(event) => {
           if (event.button !== 0) return;
@@ -288,7 +290,7 @@ export function ImpactBriefDrawer({
       >
         <div
           role="button"
-          aria-label="Move brief"
+          aria-label={t("Move brief")}
           className="flex shrink-0 cursor-grab items-center justify-between border-b border-[var(--border)] px-3 py-2 active:cursor-grabbing"
           style={{ borderBottom: "1px solid var(--border)", touchAction: "none" }}
           onPointerDown={onMovePointerDown}
@@ -301,15 +303,15 @@ export function ImpactBriefDrawer({
             <span className="label mb-0">
               {(() => {
                 const readiness = resolveBriefReadiness(item);
-                if (readiness === "full") return "Impact Brief";
-                if (readiness === "factual-only") return "Facts";
-                return "Source";
+                if (readiness === "full") return t("Impact Brief");
+                if (readiness === "factual-only") return t("Facts");
+                return t("Source");
               })()}
             </span>
           </div>
           <Button
             variant="icon"
-            aria-label="Close brief"
+            aria-label={t("Close brief")}
             onClick={onClose}
             onPointerDown={(e) => e.stopPropagation()}
           >
@@ -318,13 +320,13 @@ export function ImpactBriefDrawer({
         </div>
 
         <div className="min-h-0 flex-1 overflow-hidden">
-          <ImpactBriefPanel item={item} />
+          <ImpactBriefPanel key={item.id} item={item} />
         </div>
 
         <div
           role="separator"
           aria-orientation="vertical"
-          aria-label="Resize brief from left"
+          aria-label={t("Resize brief from left")}
           className="absolute inset-y-0 left-0 z-30 w-1.5 cursor-ew-resize touch-none hover:bg-white/10"
           style={{
             transition: "background 0.1s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
@@ -334,7 +336,7 @@ export function ImpactBriefDrawer({
         <div
           role="separator"
           aria-orientation="vertical"
-          aria-label="Resize brief from right"
+          aria-label={t("Resize brief from right")}
           className="absolute inset-y-0 right-0 z-30 w-1.5 cursor-ew-resize touch-none hover:bg-white/10"
           style={{
             transition: "background 0.1s cubic-bezier(0.25, 0.46, 0.45, 0.94)",

@@ -1,4 +1,5 @@
 "use client";
+import { useLanguage } from "@/context/LanguageContext";
 
 import { useState } from "react";
 import { X } from "lucide-react";
@@ -10,6 +11,7 @@ export function AuthModal() {
 }
 
 function AuthModalContent() {
+  const { t } = useLanguage();
   const {
     closeAuth,
     authMessage,
@@ -48,18 +50,14 @@ function AuthModalContent() {
       >
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
-            <h2 id="sign-in-title" className="text-[16px] font-semibold tracking-[-0.01em] text-[var(--text-primary)]">
-              Sign in
-            </h2>
-            <p className="mt-1 text-[13px] leading-5 text-[var(--text-secondary)]">
-              Sign in to sync your likes and saves.
-            </p>
+            <h2 id="sign-in-title" className="text-[16px] font-semibold tracking-[-0.01em] text-[var(--text-primary)]">{t("Sign in")}</h2>
+            <p className="mt-1 text-[13px] leading-5 text-[var(--text-secondary)]">{t("Sign in to sync your likes and saves.")}</p>
           </div>
           <button
             type="button"
             onClick={closeAuth}
             className="rounded-[6px] p-1 text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]"
-            aria-label="Close"
+            aria-label={t("Close")}
           >
             <X className="h-4 w-4" />
           </button>
@@ -67,14 +65,12 @@ function AuthModalContent() {
 
         {authMessage ? (
           <p className="mb-3 rounded-[6px] bg-[var(--bg-overlay)] px-3 py-2 text-[12px] text-[var(--text-body)]">
-            {authMessage}
+            {t(authMessage)}
           </p>
         ) : null}
 
         {!configured ? (
-          <p className="rounded-[6px] bg-[var(--bg-overlay)] px-3 py-2 text-[12px] leading-5 text-[var(--text-body)]">
-            Sign-in is currently unavailable. Please try again later.
-          </p>
+          <p className="rounded-[6px] bg-[var(--bg-overlay)] px-3 py-2 text-[12px] leading-5 text-[var(--text-body)]">{t("Sign-in is currently unavailable. Please try again later.")}</p>
         ) : (
           <button
             type="button"
@@ -83,14 +79,14 @@ function AuthModalContent() {
             className="flex w-full items-center justify-center gap-2 rounded-[6px] bg-[var(--cta)] px-3 py-2.5 text-[13px] font-semibold text-[var(--cta-text)] disabled:opacity-60"
           >
             <GoogleMark />
-            {busy ? "Redirecting…" : "Continue with Google"}
+            {t(busy ? "Redirecting…" : "Continue with Google")}
           </button>
 
         )}
 
         {status ? (
           <p role="status" aria-live="polite" className="mt-3 text-[12px] leading-5 text-[var(--text-secondary)]">
-            {status}
+            {t(status)}
           </p>
         ) : null}
       </div>

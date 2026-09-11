@@ -1,5 +1,7 @@
 "use client";
+import { useLanguage } from "@/context/LanguageContext";
 
+import { useState } from "react";
 import { clsx } from "clsx";
 import { Bookmark, ExternalLink, Heart } from "lucide-react";
 import { FlagBadCaseButton } from "@/components/feed/FlagBadCaseButton";
@@ -28,6 +30,8 @@ export function FeedRow({
   selected?: boolean;
   onSelect?: () => void;
 }) {
+  const { localize, locale } = useLanguage();
+  const displayItem = localize(item);
   const rank = String(index + 1).padStart(2, "0");
 
   return (
@@ -60,18 +64,18 @@ export function FeedRow({
             <span className="truncate text-[11px] text-[var(--text-muted)]">
               {item.source}
             </span>
-            {formatRelative(item.publishedAt) ? (
+            {formatRelative(item.publishedAt, locale) ? (
               <span className="text-[11px] text-[var(--text-muted)]">
-                {formatRelative(item.publishedAt)}
+                {formatRelative(item.publishedAt, locale)}
               </span>
             ) : null}
           </div>
           <h2 className="text-[15px] leading-6 font-medium tracking-[-0.015em] text-[var(--text-primary)]">
-            {item.title}
+            {displayItem.title}
           </h2>
           {item.summary ? (
             <p className="mt-1 line-clamp-2 text-[13px] leading-5 text-[var(--text-secondary)]">
-              {item.summary}
+              {displayItem.summary}
             </p>
           ) : null}
         </div>
@@ -106,13 +110,16 @@ export function ImpactBriefPanel({
 }: {
   item: FeedItem;
 }) {
+  const { t, locale, localize } = useLanguage();
+  const [showOriginal, setShowOriginal] = useState(false);
+  const displayItem = showOriginal ? item : localize(item);
   const readiness = resolveBriefReadiness(item);
   const brief = presentBrief(item.brief);
   const sections =
     readiness === "full"
       ? BRIEF_SECTIONS.filter((section) => brief[section.key])
       : [];
-  const sourceText = item.originalSummary || item.summary;
+  const sourceText = displayItem !== item ? displayItem.summary : item.originalSummary || item.summary;
   const { isLiked, toggleLike } = useLikes();
   const { isBookmarked, toggleBookmark } = useBookmarks();
   const liked = isLiked(item.id);
@@ -128,26 +135,27 @@ export function ImpactBriefPanel({
           {item.valueCue ? <ValueCueBadge cue={item.valueCue} /> : null}
         </div>
         <h2 className="text-[18px] font-semibold leading-6 tracking-[-0.02em] text-[var(--text-primary)]">
-          {item.title}
+          {displayItem.title}
         </h2>
         <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-[var(--text-muted)]">
           <SourceLogo source={item.source} size={12} />
           <span>{item.source}</span>
-          {formatRelative(item.publishedAt) ? (
+          {formatRelative(item.publishedAt, locale) ? (
             <>
               <span>·</span>
-              <span>{formatRelative(item.publishedAt)}</span>
+              <span>{formatRelative(item.publishedAt, locale)}</span>
             </>
           ) : null}
         </div>
         <div className="mt-4 flex flex-wrap items-center gap-2">
+          {locale === "zh" && localize(item) !== item ? (
+            <Button variant="subtle" onClick={() => setShowOriginal(value => !value)}>{t(showOriginal ? "Show translation" : "Show original")}</Button>
+          ) : null}
           <Button
             variant="primary"
             onClick={() => window.open(item.url, "_blank", "noopener,noreferrer")}
           >
-            <ExternalLink className="h-3.5 w-3.5" strokeWidth={2} />
-            Read original
-          </Button>
+            <ExternalLink className="h-3.5 w-3.5" strokeWidth={2} />{t("Read original")}</Button>
           <Button
             variant="subtle"
             aria-pressed={liked}
@@ -163,7 +171,7 @@ export function ImpactBriefPanel({
               strokeWidth={1.75}
               fill={liked ? "currentColor" : "none"}
             />
-            {liked ? "Liked" : "Like"}
+            {t(liked ? "Liked" : "Like")}
           </Button>
           <Button
             variant="subtle"
@@ -180,7 +188,7 @@ export function ImpactBriefPanel({
               strokeWidth={1.75}
               fill={saved ? "currentColor" : "none"}
             />
-            {saved ? "Saved" : "Save"}
+            {t(saved ? "Saved" : "Save")}
           </Button>
         </div>
       </div>
@@ -188,7 +196,7 @@ export function ImpactBriefPanel({
       <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
         {readiness === "full" ? (
           <>
-            <div className="label mb-4">Impact Brief</div>
+            <div className="label mb-4">{t("Impact Brief")}</div>
             <div className="space-y-5">
               {sections.map((section) => (
                 <section key={section.key} className="slide-in">
@@ -200,10 +208,10 @@ export function ImpactBriefPanel({
                         : "text-[var(--text-primary)]"
                     )}
                   >
-                    {section.label}
+                    {t(section.label)}
                   </h3>
                   <p className="mb-1.5 text-[11px] text-[var(--text-muted)]">
-                    {section.hint}
+                    {t(section.hint)}
                   </p>
                   <p
                     className={clsx(
@@ -221,15 +229,11 @@ export function ImpactBriefPanel({
           </>
         ) : readiness === "factual-only" ? (
           <>
-            <div className="label mb-4">Facts</div>
+            <div className="label mb-4">{t("Facts")}</div>
             {brief.whatHappened ? (
               <section className="slide-in">
-                <h3 className="mb-0.5 text-[13px] font-semibold text-[var(--text-primary)]">
-                  What happened
-                </h3>
-                <p className="mb-1.5 text-[11px] text-[var(--text-muted)]">
-                  Source-supported facts
-                </p>
+                <h3 className="mb-0.5 text-[13px] font-semibold text-[var(--text-primary)]">{t("What happened")}</h3>
+                <p className="mb-1.5 text-[11px] text-[var(--text-muted)]">{t("Source-supported facts")}</p>
                 <p className="text-[14px] leading-[22px] text-[var(--text-secondary)]">
                   {brief.whatHappened}
                 </p>
@@ -240,19 +244,19 @@ export function ImpactBriefPanel({
               </p>
             ) : null}
             <p className="mt-4 text-[12px] leading-5 text-[var(--text-muted)]">
-              {FACTUAL_ONLY_NOTICE}
+              {t(FACTUAL_ONLY_NOTICE)}
             </p>
           </>
         ) : (
           <>
-            <div className="label mb-4">Source</div>
+            <div className="label mb-4">{t("Source")}</div>
             {sourceText ? (
               <p className="text-[14px] leading-[22px] text-[var(--text-secondary)]">
                 {sourceText}
               </p>
             ) : null}
             <p className="mt-4 text-[12px] leading-5 text-[var(--text-muted)]">
-              {NONE_BRIEF_NOTICE}
+              {t(NONE_BRIEF_NOTICE)}
             </p>
           </>
         )}

@@ -1,4 +1,5 @@
 "use client";
+import { useLanguage } from "@/context/LanguageContext";
 
 import {
   useCallback,
@@ -29,6 +30,7 @@ export function PullToRefresh({
   children: ReactNode;
   className?: string;
 }) {
+  const { t } = useLanguage();
   const scrollerRef = useRef<HTMLDivElement>(null);
   const [pull, setPull] = useState(0);
   const pullRef = useRef(0);
@@ -195,7 +197,7 @@ export function PullToRefresh({
             className={`h-3 w-3 ${refreshing ? "animate-spin" : ""}`}
             strokeWidth={1.75}
           />
-          {refreshing ? "Refreshing…" : "Pull down from the top to refresh"}
+          {t(refreshing ? "Refreshing…" : "Pull down from the top to refresh")}
         </div>
       </div>
     </div>
@@ -213,6 +215,7 @@ function RefreshHint({
   spinning: boolean;
   ready: boolean;
 }) {
+  const { t } = useLanguage();
   if (!visible) return null;
   return (
     <div
@@ -232,7 +235,7 @@ function RefreshHint({
         className={`h-3 w-3 ${spinning || ready ? "animate-spin" : ""}`}
         strokeWidth={1.75}
       />
-      {spinning ? "Refreshing…" : ready ? "Release to refresh" : "Pull to refresh"}
+      {t(spinning ? "Refreshing…" : ready ? "Release to refresh" : "Pull to refresh")}
     </div>
   );
 }

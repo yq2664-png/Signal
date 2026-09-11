@@ -1,4 +1,5 @@
 "use client";
+import { useLanguage } from "@/context/LanguageContext";
 
 import { Search } from "lucide-react";
 import type { ReactNode } from "react";
@@ -26,6 +27,7 @@ export function FeedFilters({
   resultCount: number;
   extra?: ReactNode;
 }) {
+  const { t, locale } = useLanguage();
   return (
     <div
       className="shrink-0 space-y-3 border-b border-[var(--border)] px-4 py-3"
@@ -40,12 +42,12 @@ export function FeedFilters({
           <input
             value={value.query}
             onChange={(e) => onChange({ ...value, query: e.target.value })}
-            placeholder="Search…"
+            placeholder={t("Search…")}
             className="h-8 w-full rounded-[6px] bg-[var(--bg-overlay)] pr-3 pl-8 text-[13px] text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] focus:shadow-[var(--inset-border)]"
           />
         </div>
         <div className="mono hidden text-[11px] text-[var(--text-muted)] sm:block">
-          {resultCount} items
+          {resultCount} {locale === "zh" ? "条" : "items"}
         </div>
       </div>
 

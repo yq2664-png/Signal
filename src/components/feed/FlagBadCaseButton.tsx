@@ -1,4 +1,5 @@
 "use client";
+import { useLanguage } from "@/context/LanguageContext";
 
 import { useEffect, useState } from "react";
 import { Flag } from "lucide-react";
@@ -42,6 +43,7 @@ export function FlagBadCaseButton({
   item: FeedItem;
   quiet?: boolean;
 }) {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState<BadCaseReason>("title");
@@ -90,17 +92,17 @@ export function FlagBadCaseButton({
       {quiet ? (
         <button
           type="button"
-          aria-label={flagged ? "Already flagged" : "Flag this item"}
+          aria-label={t(flagged ? "Already flagged" : "Flag this item")}
           aria-pressed={flagged}
           onClick={() => setOpen((v) => !v)}
           className="text-[11px] text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
         >
-          {flagged ? "Flagged" : "Flag"}
+          {t(flagged ? "Flagged" : "Flag")}
         </button>
       ) : (
         <Button
           variant="subtle"
-          aria-label={flagged ? "Bad case already flagged" : "Flag bad case"}
+          aria-label={t(flagged ? "Bad case already flagged" : "Flag bad case")}
           aria-pressed={flagged}
           onClick={() => setOpen((v) => !v)}
           className={flagged ? "text-[var(--status-label)]" : undefined}
@@ -110,7 +112,7 @@ export function FlagBadCaseButton({
             strokeWidth={1.75}
             fill={flagged ? "currentColor" : "none"}
           />
-          {flagged ? "Flagged" : "Bad case"}
+          {t(flagged ? "Flagged" : "Bad case")}
         </Button>
       )}
 
@@ -122,12 +124,12 @@ export function FlagBadCaseButton({
           }}
         >
           <div className="label mb-1.5 px-1">
-            {flagged ? "Update flag" : "What’s wrong?"}
+            {t(flagged ? "Update flag" : "What’s wrong?")}
           </div>
           {flagged && flaggedReason ? (
             <p className="mb-1.5 px-1 text-[11px] text-[var(--text-muted)]">
-              Already flagged ·{" "}
-              {REASONS.find((r) => r.id === flaggedReason)?.label ?? flaggedReason}
+              {t("Already flagged")} ·{" "}
+              {t(REASONS.find((r) => r.id === flaggedReason)?.label ?? flaggedReason)}
             </p>
           ) : null}
           <div className="flex flex-wrap gap-1">
@@ -142,23 +144,23 @@ export function FlagBadCaseButton({
                     : "rounded-[4px] bg-[var(--bg-overlay)] px-2 py-1 text-[11px] text-[var(--text-muted)]"
                 }
               >
-                {r.label}
+                {t(r.label)}
               </button>
             ))}
           </div>
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="Optional note"
+            placeholder={t("Optional note")}
             rows={2}
             className="mt-2 w-full resize-none rounded-[6px] bg-[var(--bg-overlay)] px-2 py-1.5 text-[12px] text-[var(--text-body)] outline-none placeholder:text-[var(--text-muted)]"
           />
           <div className="mt-2 flex items-center justify-end gap-1.5">
             <Button variant="ghost" onClick={() => setOpen(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button variant="primary" disabled={saving} onClick={submit}>
-              {saving ? "Saving…" : flagged ? "Update" : "Submit"}
+              {t(saving ? "Saving…" : flagged ? "Update" : "Submit")}
             </Button>
           </div>
         </div>

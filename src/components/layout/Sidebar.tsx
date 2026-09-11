@@ -1,4 +1,5 @@
 "use client";
+import { useLanguage } from "@/context/LanguageContext";
 
 import { clsx } from "clsx";
 import Link from "next/link";
@@ -24,6 +25,7 @@ const libraryNav = [
 ];
 
 export function Sidebar() {
+  const { t } = useLanguage();
   const pathname = usePathname();
   const { count: likeCount } = useLikes();
   const { count: saveCount } = useBookmarks();
@@ -42,9 +44,7 @@ export function Sidebar() {
           <div className="text-[14px] font-semibold tracking-[-0.02em] text-[var(--text-primary)]">
             SIGNAL
           </div>
-          <div className="mono text-[10px] leading-3 text-[var(--text-muted)]">
-            What matters in AI
-          </div>
+          <div className="mono text-[10px] leading-3 text-[var(--text-muted)]">{t("What matters in AI")}</div>
         </div>
       </div>
 
@@ -66,12 +66,12 @@ export function Sidebar() {
               }}
             >
               <Icon className="h-4 w-4 shrink-0 opacity-80" strokeWidth={1.75} />
-              <span className="min-w-0 flex-1 font-medium">{label}</span>
+              <span className="min-w-0 flex-1 font-medium">{t(label)}</span>
             </Link>
           );
         })}
 
-        <div className="label mb-1 mt-5 px-2">Library</div>
+        <div className="label mb-1 mt-5 px-2">{t("Library")}</div>
         {libraryNav.map(({ href, label, icon: Icon, badge }) => {
           const active =
             pathname === href || pathname.startsWith(`${href}/`);
@@ -92,7 +92,7 @@ export function Sidebar() {
               }}
             >
               <Icon className="h-3.5 w-3.5 shrink-0 opacity-70" strokeWidth={1.75} />
-              <span className="min-w-0 flex-1">{label}</span>
+              <span className="min-w-0 flex-1">{t(label)}</span>
               {count > 0 ? (
                 <span className="mono text-[10px] text-[var(--text-muted)]">
                   {count}
@@ -114,18 +114,14 @@ export function Sidebar() {
               onClick={() => void logout()}
               className="mt-1 inline-flex items-center gap-1.5 text-[11px] text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
             >
-              <LogOut className="h-3 w-3" />
-              Sign out
-            </button>
+              <LogOut className="h-3 w-3" />{t("Sign out")}</button>
           </div>
         ) : (
           <button
             type="button"
             onClick={() => openAuth()}
             className="w-full rounded-[6px] px-2.5 py-1.5 text-left text-[12px] text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-secondary)]"
-          >
-            Sign in to sync
-          </button>
+          >{t("Sign in to sync")}</button>
         )}
       </div>
     </aside>

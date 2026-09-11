@@ -1,3 +1,5 @@
+"use client";
+import { useLanguage } from "@/context/LanguageContext";
 import { clsx } from "clsx";
 import type { ReactNode } from "react";
 
@@ -25,6 +27,7 @@ export function TierBadge({
 }: {
   tier: "High Impact" | "Trending" | "Emerging";
 }) {
+  const { t } = useLanguage();
   const tone =
     tier === "High Impact"
       ? "tier-high"
@@ -32,7 +35,7 @@ export function TierBadge({
         ? "tier-trend"
         : "tier-emerging";
 
-  return <Badge className={tone}>{tier}</Badge>;
+  return <Badge className={tone}>{t(tier)}</Badge>;
 }
 
 export function CategoryBadge({ category }: { category: string }) {
@@ -48,11 +51,12 @@ export function ValueCueBadge({
 }: {
   cue: "High Impact" | "New Capability" | "Developer Signal";
 }) {
+  const { t } = useLanguage();
   const tone =
     cue === "High Impact"
       ? "tier-high"
       : cue === "New Capability"
         ? "tier-emerging"
         : "tier-trend";
-  return <Badge className={tone}>{cue}</Badge>;
+  return <Badge className={tone}>{t(cue)}</Badge>;
 }

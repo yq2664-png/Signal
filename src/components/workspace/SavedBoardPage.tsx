@@ -1,4 +1,5 @@
 "use client";
+import { useLanguage } from "@/context/LanguageContext";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ImpactBriefDrawer } from "@/components/feed/ImpactBriefDrawer";
@@ -22,6 +23,7 @@ export function SavedBoardPage({
   emptyMessage: string;
   emptyAction?: { label: string; onClick: () => void };
 }) {
+  const { t } = useLanguage();
   const { items: liveItems } = useFeed();
   const [selectedId, setSelectedId] = useState("");
   const [briefOpen, setBriefOpen] = useState(false);
@@ -57,7 +59,7 @@ export function SavedBoardPage({
             onClick={emptyAction.onClick}
             className="rounded-[6px] bg-[var(--cta)] px-3 py-1.5 text-[12px] font-semibold text-[var(--cta-text)]"
           >
-            {emptyAction.label}
+            {t(emptyAction.label)}
           </button>
         ) : null
       }
@@ -69,7 +71,7 @@ export function SavedBoardPage({
             selectedId={selected?.id}
             onSelect={openBrief}
             loading={!ready}
-            emptyMessage={emptyMessage}
+            emptyMessage={t(emptyMessage)}
           />
         </div>
         {selected && briefOpen ? (

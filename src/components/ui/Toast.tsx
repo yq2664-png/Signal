@@ -8,6 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { useLanguage } from "@/context/LanguageContext";
 import { clsx } from "clsx";
 import { X } from "lucide-react";
 
@@ -26,6 +27,7 @@ type ToastContextValue = {
 const ToastContext = createContext<ToastContextValue | null>(null);
 
 export function ToastProvider({ children }: { children: ReactNode }) {
+  const { t } = useLanguage();
   const [items, setItems] = useState<ToastItem[]>([]);
 
   const dismiss = useCallback((id: string) => {
@@ -63,10 +65,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 "rgb(35,37,42) 0px 0px 0px 1px inset, rgba(0,0,0,0.4) 0px 2px 4px 0px",
             }}
           >
-            <span className="min-w-0 flex-1 leading-5">{item.message}</span>
+            <span className="min-w-0 flex-1 leading-5">{t(item.message)}</span>
             <button
               type="button"
-              aria-label="Dismiss"
+              aria-label={t("Dismiss")}
               onClick={() => dismiss(item.id)}
               className="shrink-0 rounded-[4px] p-0.5 text-[var(--text-muted)] hover:text-[var(--text-primary)]"
             >
