@@ -11,6 +11,11 @@ export function localizeItem(item: FeedItem, locale: Locale, translations: Trans
   return { ...item, title: entry.title, summary: entry.summary };
 }
 export const zh: Record<string, string> = {
+  "Developer Community": "开发者社区", "Foreign Media": "海外媒体", "Tech Blog": "技术博客",
+  "GitHub · Articles": "GitHub · 文章", "GitHub · Skills": "GitHub · 技能", "GitHub · Projects": "GitHub · 项目",
+  "Embodied AI": "具身智能", "Release": "发布", "Skill": "技能", "Discussion | Link": "讨论 | 链接",
+  "AI & ML": "AI 与机器学习", "Artificial Intelligence": "人工智能", "Multimodal": "多模态",
+
   "Paper": "论文",
   "Facts": "事实",
   "Source": "来源",

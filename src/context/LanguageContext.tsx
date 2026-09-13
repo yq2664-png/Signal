@@ -32,7 +32,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         const response = await fetch("/api/feed/translations", { signal: controller.signal, cache: "no-store" });
         if (!response.ok) throw new Error("Translation unavailable");
         const data = await response.json();
-        if (!cancelled) setTranslations(data.translations ?? {});
+        if (!cancelled) setTranslations(previous => ({ ...previous, ...(data.translations ?? {}) }));
         if (data.pending) delay = 5_000;
       } catch { /* original text remains available */ }
       if (!cancelled) timer = setTimeout(poll, delay);

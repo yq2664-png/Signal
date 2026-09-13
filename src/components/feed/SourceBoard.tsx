@@ -389,7 +389,7 @@ const BoardCard = memo(function BoardCard({
       >
         <SourceLogo source={item.source} size={14} />
         <span className="min-w-0 flex-1 truncate text-[11px] text-[var(--text-muted)]">
-          {paperHeaderLabel(item)}
+          {t(paperHeaderLabel(item))}
         </span>
         <button
           type="button"
@@ -536,7 +536,7 @@ function NewsCard({
   item: FeedItem;
   accent: string;
 }) {
-  const { locale } = useLanguage();
+  const { locale, t } = useLanguage();
   return (
     <div>
       <SafeImage
@@ -555,7 +555,7 @@ function NewsCard({
           className="rounded-[4px] px-1.5 py-0.5 font-medium"
           style={{ background: `${accent}22`, color: accent }}
         >
-          {item.native?.subtitle || item.source}
+          {t(item.native?.subtitle || item.source)}
         </span>
         {item.native?.authorName ? (
           <span className="text-[var(--text-muted)]">{item.native.authorName}</span>
@@ -734,6 +734,7 @@ function ForumCard({
   item: FeedItem;
   accent: string;
 }) {
+  const { locale } = useLanguage();
   const points = item.native?.points;
   const comments = item.native?.comments;
   return (
@@ -757,7 +758,7 @@ function ForumCard({
         ) : null}
         <div className="mt-1 text-[11px] text-[var(--text-muted)]">
           {item.native?.authorName ? `${item.native.authorName} · ` : null}
-          {comments != null ? `${comments} comments · ` : null}
+          {comments != null ? `${comments} ${locale === "zh" ? "条评论" : "comments"} · ` : null}
           <PublishedLabel at={item.publishedAt} />
         </div>
       </div>
@@ -766,6 +767,7 @@ function ForumCard({
 }
 
 function RepoCard({ item }: { item: FeedItem }) {
+  const { t } = useLanguage();
   const stars = item.native?.stars;
   const forks = item.native?.forks;
   const lang = item.native?.subtitle;
@@ -796,7 +798,7 @@ function RepoCard({ item }: { item: FeedItem }) {
           {forks != null ? (
             <span className="mono">⑂ {formatCount(forks)}</span>
           ) : null}
-          {lang ? <span>{lang}</span> : null}
+          {lang ? <span>{t(lang)}</span> : null}
           <PublishedLabel at={item.publishedAt} />
         </div>
       </div>

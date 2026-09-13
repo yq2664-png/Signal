@@ -49,3 +49,25 @@ it("invalidates translations when source content changes", async () => {
   expect((await service.getFeedTranslations([item])).translations.one.title).toBe("模型发布");
   expect((await service.getFeedTranslations([{ ...item, summary: "Corrected" }])).translations).toEqual({});
 });
+it("retains good rows, finishes more than 60 posts and retries bad rows after all others", async () => {
+  const items = Array.from({ length: 65 }, (_, i) => ({ ...item, id: String(i), title: `Post ${i}` }));
+  const requests: string[][] = [];
+  vi.stubGlobal("fetch", vi.fn(async (_url: string, options: RequestInit) => {
+    const body = JSON.parse(String(options.body));
+    const input = JSON.parse(body.messages[1].content) as FeedItem[];
+    requests.push(input.map(post => post.id));
+    return new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify({ items: input.map(post => ({
+      id: post.id, title: "中文标题", summary: post.id === "0" ? null : "中文摘要",
+    })) }) } }] }));
+  }));
+  const { getFeedTranslations } = await import("./feed-translations");
+  await getFeedTranslations(items);
+  await vi.waitFor(() => expect(disk.rename).toHaveBeenCalledTimes(8));
+  const result = await getFeedTranslations(items);
+  expect(Object.keys(result.translations)).toHaveLength(64);
+  expect(result.translations["64"].title).toBe("中文标题");
+  expect(result.translations["0"]).toBeUndefined();
+  expect(requests.at(-1)).toEqual(["0"]);
+  expect(result.pending).toBe(false);
+  expect(requests).toHaveLength(8);
+});
