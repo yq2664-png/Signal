@@ -1,3 +1,4 @@
+import { isRelevantYouTube } from "./feed-quality";
 import type { FeedItem } from "@/lib/types";
 import { liveFetchOptions } from "@/lib/live/live-fetch";
 import { slugId, toFeedItem } from "@/lib/live/normalize";
@@ -95,7 +96,7 @@ export async function fetchYouTube(limit = 8): Promise<FeedItem[]> {
   url.searchParams.set("part", "snippet");
   url.searchParams.set(
     "q",
-    "AI OR LLM OR GPT OR Claude OR Gemini OR \"machine learning\""
+    "LLM tutorial OR AI model benchmark OR coding agent OR machine learning research"
   );
   url.searchParams.set("type", "video");
   url.searchParams.set("order", "date");
@@ -121,10 +122,11 @@ export async function fetchYouTube(limit = 8): Promise<FeedItem[]> {
   const searchItems = (data.items ?? []).filter(
     (item) => item.id?.videoId && item.snippet?.title
   );
-  const videoIds = searchItems.map((i) => i.id!.videoId!);
+  const qualifiedItems = searchItems.filter(item => isRelevantYouTube(item.snippet!.title!, item.snippet?.description || ""));
+  const videoIds = qualifiedItems.map((i) => i.id!.videoId!);
   const details = await fetchVideoDetails(key, videoIds);
 
-  return searchItems.flatMap((item) => {
+  return qualifiedItems.flatMap((item) => {
     const videoId = item.id!.videoId!;
     const title = item.snippet!.title!;
     const description = item.snippet?.description || title;
@@ -144,6 +146,8 @@ export async function fetchYouTube(limit = 8): Promise<FeedItem[]> {
       id: slugId("yt", videoId),
       title,
       source: "YouTube",
+      briefEligible: false,
+      briefReadiness: "none",
       publishedAt,
       category: "Industry Trends",
       summary: `${channel}: ${description}`.slice(0, 420),

@@ -134,6 +134,9 @@ Blurb rules:
 - 1–2 sentences, max ~220 chars, say what changed and why a PM might care.
 - Do not repeat the headline verbatim. Add supporting numbers, comparison conditions or availability from the raw source. Never invent a benchmark, score, comparator or PM implication. Preserve vendor attribution.
 
+Brief rules:
+- Use only supplied source evidence. Leave whyItMatters, potentialImpact and keyTakeaway empty when the source does not support specific analysis. Never fill gaps with generic roadmap advice or claim the hosting platform published the underlying news.
+
 Scoring guide:
 - impact: lasting importance for AI product ecosystem
 - relevance: usefulness to PMs/designers shipping AI features
@@ -240,6 +243,7 @@ async function mapPool<T, R>(
 }
 
 export function shouldEnrichItem(item: FeedItem): boolean {
+  if (item.source === "YouTube") return false;
   if (resolveBriefReadiness(item) !== "full") return false;
   if (item.tags?.includes("ai-headline-v4")) return false;
   // Older rewritten items can only be upgraded from preserved source text.

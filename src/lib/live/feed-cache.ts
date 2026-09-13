@@ -1,3 +1,4 @@
+import { enforceFeedQuality } from "./feed-quality";
 import { mkdir, readFile, rename, writeFile } from "fs/promises";
 import path from "path";
 import type { FeedPayload, FeedRefreshContext } from "@/lib/live/aggregate";
@@ -62,10 +63,11 @@ function withCacheMeta(
   fetchedAtMs: number,
   fromCache: boolean
 ): FeedPayload {
+  const safeItems = enforceFeedQuality(payload.items);
   const ageMs = Math.max(0, Date.now() - fetchedAtMs);
   return {
     ...payload,
-    items: payload.items.map((item) => ({
+    items: safeItems.map((item) => ({
       ...item,
       url: publicReadUrl(item.url),
       officialLaunch: item.officialLaunch
@@ -82,6 +84,7 @@ function withCacheMeta(
     })),
     meta: {
       ...payload.meta,
+      liveCount: safeItems.length,
       fetchedAt: new Date(fetchedAtMs).toISOString(),
       fromCache,
       warming: false,

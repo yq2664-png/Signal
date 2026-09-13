@@ -183,15 +183,12 @@ export function makeBrief(input: {
   source: Source;
   category: Category;
 }): FeedItem["brief"] {
-  const snippet =
-    input.summary.slice(0, 220) + (input.summary.length > 220 ? "…" : "");
-
+  // A source snippet supports a factual excerpt, not invented product implications.
   return {
-    whatHappened: `${input.source} published an update: ${input.title}. ${snippet}`,
-    whyItMatters:
-      "This item was ingested from a trusted source feed. A structured triage template is shown when the AI enrichment layer is unavailable.",
-    potentialImpact: `Review whether this ${input.category.toLowerCase()} changes your roadmap, evaluation set, or product UX assumptions in the next sprint.`,
-    keyTakeaway: `Skim the source, then decide: track, pilot, or ignore — starting from “${input.title.slice(0, 80)}${input.title.length > 80 ? "…" : ""}”.`,
+    whatHappened: input.summary.trim() || input.title.trim(),
+    whyItMatters: "",
+    potentialImpact: "",
+    keyTakeaway: "",
   };
 }
 
