@@ -89,3 +89,24 @@ it("upgrades a title-only cache with all brief paragraphs without losing existin
   expect(result.translations.one.sourceBrief).toEqual(brief);
   expect(result.pending).toBe(false);
 });
+it("keeps English and Chinese requests, workers and persisted caches separate", async () => {
+  const post = { ...item, title: "发布新模型", summary: "支持本地部署" };
+  const prompts: string[] = [];
+  vi.stubGlobal("fetch", vi.fn(async (_url: string, options: RequestInit) => {
+    const body = JSON.parse(String(options.body));
+    const prompt = body.messages[0].content as string;
+    prompts.push(prompt);
+    const en = prompt.includes("fluent English");
+    return new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify({ items: [{ id: "one", title: en ? "New model released" : "新模型发布", summary: en ? "Supports local deployment" : "支持本地部署" }] }) } }] }));
+  }));
+  const { getFeedTranslations } = await import("./feed-translations");
+  await Promise.all([getFeedTranslations([post], "en"), getFeedTranslations([post], "zh")]);
+  await vi.waitFor(() => expect(disk.rename).toHaveBeenCalledTimes(2));
+  const en = await getFeedTranslations([post], "en");
+  const zh = await getFeedTranslations([post], "zh");
+  expect(en.translations.one.title).toBe("New model released");
+  expect(en.translations.one.locale).toBe("en");
+  expect(zh.translations.one.title).toBe("新模型发布");
+  expect(prompts.some(p => p.includes("fluent English"))).toBe(true);
+  expect(disk.rename.mock.calls.map(call => call[1])).toEqual(expect.arrayContaining([expect.stringContaining("-en-v1.json"), expect.stringContaining("-zh-v1.json")]));
+});

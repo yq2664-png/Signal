@@ -36,3 +36,10 @@ it("switches all brief paragraphs together and rejects stale brief translations"
   const changed = { ...post, brief: { ...brief, potentialImpact: "Correction" } };
   expect(localizeItem(changed, "zh", cache).brief).toBe(changed.brief);
 });
+it("uses English translations for Chinese posts, never a Chinese cache entry", () => {
+  const post = { ...item, title: "新模型发布", summary: "支持本地部署" };
+  const en = { post: { locale: "en" as const, sourceTitle: post.title, sourceSummary: post.summary, title: "New model released", summary: "Supports local deployment" } };
+  expect(localizeItem(post, "en", en).title).toBe("New model released");
+  expect(localizeItem(post, "zh", en)).toBe(post);
+  expect(translateUI("量子位", "en")).toBe("QbitAI");
+});

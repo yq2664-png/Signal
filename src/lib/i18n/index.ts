@@ -1,6 +1,6 @@
 import type { FeedItem } from "@/lib/types";
 export type Locale = "en" | "zh";
-export type Translation = { sourceTitle: string; sourceSummary: string; title: string; summary: string; sourceBrief?: FeedItem["brief"]; brief?: FeedItem["brief"] };
+export type Translation = { locale?: Locale; sourceTitle: string; sourceSummary: string; title: string; summary: string; sourceBrief?: FeedItem["brief"]; brief?: FeedItem["brief"] };
 export const briefFields = ["whatHappened", "whyItMatters", "potentialImpact", "keyTakeaway"] as const;
 export type Translations = Record<string, Translation>;
 export function resolveLocale(saved: string | null, browser: string): Locale {
@@ -8,7 +8,7 @@ export function resolveLocale(saved: string | null, browser: string): Locale {
 }
 export function localizeItem(item: FeedItem, locale: Locale, translations: Translations): FeedItem {
   const entry = translations[item.id];
-  if (locale !== "zh" || !entry || entry.sourceTitle !== item.title || entry.sourceSummary !== item.summary) return item;
+  if (!entry || (entry.locale ?? "zh") !== locale || entry.sourceTitle !== item.title || entry.sourceSummary !== item.summary) return item;
   const briefMatches = entry.sourceBrief && entry.brief && briefFields.every(field => entry.sourceBrief?.[field] === item.brief?.[field]);
   return { ...item, title: entry.title, summary: entry.summary, ...(briefMatches ? { brief: entry.brief } : {}) };
 }
@@ -93,7 +93,7 @@ export const zh: Record<string, string> = {
   "No saved items yet. Bookmark cards in Feed to collect them here.":"暂无收藏，点击动态上的收藏按钮即可添加。",
 };
 export function translateUI(text: string, locale: Locale): string {
-  if (locale === "en") return text;
+  if (locale === "en") return ({ "量子位": "QbitAI", "新智元": "AI Era", "机器之心": "Synced", "资讯": "News", "研究": "Research", "技能": "Skill" } as Record<string, string>)[text] ?? text;
   if (zh[text]) return zh[text];
   if (text.startsWith("Flagged · ")) return `已反馈 · ${translateUI(text.slice(10), locale)}`;
   return text.replace(/^(\d+) liked · synced to /, "$1 条喜欢 · 已同步至 ")

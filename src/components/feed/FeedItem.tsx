@@ -148,7 +148,7 @@ export function ImpactBriefPanel({
           ) : null}
         </div>
         <div className="mt-4 flex flex-wrap items-center gap-2">
-          {locale === "zh" && localize(item) !== item ? (
+          {localize(item) !== item ? (
             <Button variant="subtle" onClick={() => setShowOriginal(value => !value)}>{t(showOriginal ? "Show translation" : "Show original")}</Button>
           ) : null}
           <Button

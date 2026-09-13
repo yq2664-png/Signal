@@ -8,7 +8,7 @@ const LanguageContext = createContext<{
 } | null>(null);
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [locale, updateLocale] = useState<Locale>("en");
-  const [translations, setTranslations] = useState<Translations>({});
+  const [translations, setTranslations] = useState<Record<Locale, Translations>>({ en: {}, zh: {} });
   useEffect(() => {
     let saved = null;
     try { saved = localStorage.getItem("signal-language"); } catch { /* private mode */ }
@@ -22,17 +22,16 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     try { localStorage.setItem("signal-language", next); } catch { /* private mode */ }
   }, []);
   useEffect(() => {
-    if (locale !== "zh") return;
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout>;
     const controller = new AbortController();
     const poll = async () => {
       let delay = 60_000;
       try {
-        const response = await fetch("/api/feed/translations", { signal: controller.signal, cache: "no-store" });
+        const response = await fetch(`/api/feed/translations?locale=${locale}`, { signal: controller.signal, cache: "no-store" });
         if (!response.ok) throw new Error("Translation unavailable");
         const data = await response.json();
-        if (!cancelled) setTranslations(previous => ({ ...previous, ...(data.translations ?? {}) }));
+        if (!cancelled) setTranslations(previous => ({ ...previous, [locale]: { ...previous[locale], ...(data.translations ?? {}) } }));
         if (data.pending) delay = 5_000;
       } catch { /* original text remains available */ }
       if (!cancelled) timer = setTimeout(poll, delay);
@@ -41,7 +40,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     return () => { cancelled = true; controller.abort(); clearTimeout(timer); };
   }, [locale]);
   const t = useCallback((text: string) => translateUI(text, locale), [locale]);
-  const localize = useCallback((item: FeedItem) => localizeItem(item, locale, translations), [locale, translations]);
+  const localize = useCallback((item: FeedItem) => localizeItem(item, locale, translations[locale]), [locale, translations]);
   const value = useMemo(() => ({ locale, setLocale, t, localize }), [locale, setLocale, t, localize]);
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }
