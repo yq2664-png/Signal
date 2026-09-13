@@ -1,6 +1,7 @@
 import type { FeedItem } from "@/lib/types";
 export type Locale = "en" | "zh";
-export type Translation = { sourceTitle: string; sourceSummary: string; title: string; summary: string };
+export type Translation = { sourceTitle: string; sourceSummary: string; title: string; summary: string; sourceBrief?: FeedItem["brief"]; brief?: FeedItem["brief"] };
+export const briefFields = ["whatHappened", "whyItMatters", "potentialImpact", "keyTakeaway"] as const;
 export type Translations = Record<string, Translation>;
 export function resolveLocale(saved: string | null, browser: string): Locale {
   return saved === "en" || saved === "zh" ? saved : browser.toLowerCase().startsWith("zh") ? "zh" : "en";
@@ -8,7 +9,8 @@ export function resolveLocale(saved: string | null, browser: string): Locale {
 export function localizeItem(item: FeedItem, locale: Locale, translations: Translations): FeedItem {
   const entry = translations[item.id];
   if (locale !== "zh" || !entry || entry.sourceTitle !== item.title || entry.sourceSummary !== item.summary) return item;
-  return { ...item, title: entry.title, summary: entry.summary };
+  const briefMatches = entry.sourceBrief && entry.brief && briefFields.every(field => entry.sourceBrief?.[field] === item.brief?.[field]);
+  return { ...item, title: entry.title, summary: entry.summary, ...(briefMatches ? { brief: entry.brief } : {}) };
 }
 export const zh: Record<string, string> = {
   "Developer Community": "开发者社区", "Foreign Media": "海外媒体", "Tech Blog": "技术博客",

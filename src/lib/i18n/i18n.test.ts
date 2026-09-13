@@ -26,3 +26,13 @@ describe("bilingual presentation", () => {
     expect(translateUI("Unknown source", "zh")).toBe("Unknown source");
   });
 });
+it("switches all brief paragraphs together and rejects stale brief translations", () => {
+  const brief = { whatHappened: "Released", whyItMatters: "Useful", potentialImpact: "May help", keyTakeaway: "Try it" };
+  const translated = { whatHappened: "已发布", whyItMatters: "具有实用价值", potentialImpact: "可能有帮助", keyTakeaway: "尝试使用" };
+  const post = { ...item, brief };
+  const cache = { post: { ...translations.post, sourceBrief: brief, brief: translated } };
+  expect(localizeItem(post, "zh", cache).brief).toEqual(translated);
+  expect(localizeItem(post, "en", cache)).toBe(post);
+  const changed = { ...post, brief: { ...brief, potentialImpact: "Correction" } };
+  expect(localizeItem(changed, "zh", cache).brief).toBe(changed.brief);
+});

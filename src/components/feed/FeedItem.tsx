@@ -114,7 +114,7 @@ export function ImpactBriefPanel({
   const [showOriginal, setShowOriginal] = useState(false);
   const displayItem = showOriginal ? item : localize(item);
   const readiness = resolveBriefReadiness(item);
-  const brief = presentBrief(item.brief);
+  const brief = presentBrief(displayItem.brief);
   const sections =
     readiness === "full"
       ? BRIEF_SECTIONS.filter((section) => brief[section.key])
@@ -139,7 +139,7 @@ export function ImpactBriefPanel({
         </h2>
         <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-[var(--text-muted)]">
           <SourceLogo source={item.source} size={12} />
-          <span>{item.source}</span>
+          <span>{t(item.source)}</span>
           {formatRelative(item.publishedAt, locale) ? (
             <>
               <span>·</span>

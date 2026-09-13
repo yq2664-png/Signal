@@ -71,3 +71,21 @@ it("retains good rows, finishes more than 60 posts and retries bad rows after al
   expect(result.pending).toBe(false);
   expect(requests).toHaveLength(8);
 });
+it("upgrades a title-only cache with all brief paragraphs without losing existing titles", async () => {
+  const brief = { whatHappened: "A model launched", whyItMatters: "It adds a tool", potentialImpact: "It may help teams", keyTakeaway: "Try the tool" };
+  const post = { ...item, brief };
+  const translated = { whatHappened: "发布了一款模型", whyItMatters: "新增了一项工具", potentialImpact: "可能帮助团队", keyTakeaway: "尝试该工具" };
+  let finish!: (value: Response) => void;
+  vi.stubGlobal("fetch", vi.fn(() => new Promise<Response>(resolve => { finish = resolve; })));
+  const service = await import("./feed-translations");
+  disk.readFile.mockResolvedValue(JSON.stringify({ [service.translationKey(post)]: { sourceTitle: post.title, sourceSummary: post.summary, title: "模型发布", summary: "新模型" } }));
+  const initial = await service.getFeedTranslations([post]);
+  expect(initial.translations.one.title).toBe("模型发布");
+  expect(initial.pending).toBe(true);
+  finish(new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify({ items: [{ id: "one", title: "模型发布", summary: "新模型", brief: translated }] }) } }] })));
+  await vi.waitFor(() => expect(disk.rename).toHaveBeenCalledTimes(1));
+  const result = await service.getFeedTranslations([post]);
+  expect(result.translations.one.brief).toEqual(translated);
+  expect(result.translations.one.sourceBrief).toEqual(brief);
+  expect(result.pending).toBe(false);
+});
