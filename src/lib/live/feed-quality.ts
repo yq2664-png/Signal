@@ -1,3 +1,4 @@
+import { cleanProductDescription, hasProductDescription } from "./product-content";
 import type { FeedItem } from "@/lib/types";
 
 function prose(text: string): string {
@@ -15,6 +16,16 @@ export function isRelevantYouTube(title: string, description: string): boolean {
 /** Apply on cache reads as well as new crawls so old bad cards cannot survive deployments. */
 export function enforceFeedQuality(items: FeedItem[]): FeedItem[] {
   return items.flatMap(item => {
+    if (/^(?:discussion\s*[|｜]\s*link|讨论\s*[|｜]\s*链接)\s*$/i.test((item.originalSummary ?? item.summary).trim())) return [];
+    if (item.source === "Product Hunt") {
+      const description = item.originalSummary ?? item.summary;
+      if (!hasProductDescription(item.originalTitle ?? item.title, description)) return [];
+      const translations = item.translations ? Object.fromEntries(Object.entries(item.translations).map(([locale, content]) => [locale, {
+        ...content, brief: { whatHappened: content.summary, whyItMatters: "", potentialImpact: "", keyTakeaway: "" },
+      }])) : undefined;
+      return [{ ...item, ...(translations ? { translations } : {}), briefReadiness: "factual-only" as const,
+        brief: { whatHappened: cleanProductDescription(description), whyItMatters: "", potentialImpact: "", keyTakeaway: "" } }];
+    }
     if (item.source === "YouTube") {
       if (!isRelevantYouTube(item.originalTitle ?? item.title, item.originalSummary ?? item.summary)) return [];
       // Search metadata supplies no transcript or evidence for an Impact Brief.

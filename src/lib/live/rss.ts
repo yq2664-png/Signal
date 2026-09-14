@@ -1,3 +1,5 @@
+import { cleanProductDescription, fetchProductDescription, hasProductDescription } from "./product-content";
+import { enforceFeedQuality } from "./feed-quality";
 import Parser from "rss-parser";
 import type { Category, FeedItem, Source } from "@/lib/types";
 import { fetchXinZhiYuan } from "@/lib/live/chinese-media";
@@ -306,7 +308,7 @@ export async function fetchRssFeed(config: RssSourceConfig): Promise<FeedItem[]>
         const summary =
           item.contentSnippet ||
           stripHtml(item.content ?? "") ||
-          feed.description ||
+          (config.source === "Product Hunt" ? "" : feed.description) ||
           item.title!;
         const publishedAt = rssPublishedAt(item);
         if (!publishedAt) return null;
@@ -355,11 +357,23 @@ export async function fetchRssFeed(config: RssSourceConfig): Promise<FeedItem[]>
       })
       .filter((item): item is FeedItem => item !== null);
 
+    if (config.source === "Product Hunt") {
+      items = (await Promise.all(items.map(async item => {
+        const description = hasProductDescription(item.title, item.originalSummary ?? item.summary)
+          ? cleanProductDescription(item.originalSummary ?? item.summary)
+          : await fetchProductDescription(item.url, item.title);
+        if (!description) return null;
+        return { ...item, summary: description, originalSummary: description,
+          briefReadiness: "factual-only" as const,
+          brief: { whatHappened: description, whyItMatters: "", potentialImpact: "", keyTakeaway: "" } };
+      }))).filter((item): item is NonNullable<typeof item> => item !== null);
+    }
+
     if (config.fetchOg) {
       items = await enrichOgImages(items, limit);
     }
 
-    return items;
+    return enforceFeedQuality(items);
   } catch (error) {
     console.error(`[rss] failed ${config.url}`, error);
     return [];

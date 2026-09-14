@@ -1,3 +1,4 @@
+import { enforceFeedQuality } from "./feed-quality";
 import { mkdir, readFile, rename, writeFile } from "fs/promises";
 import path from "path";
 import { getCacheDir } from "./cache-dir";
@@ -47,10 +48,11 @@ export async function publishBilingualFeed(feed: FeedPayload, persist = true): P
     }
     // A cold crawl must not clear the durable, already bilingual snapshot.
     if (feed.meta.warming && !feed.items.length && published) items.push(...published.items);
+    const safeItems = enforceFeedQuality(items);
     const next: FeedPayload = {
-      ...feed, items,
-      meta: { ...feed.meta, liveCount: items.length, translationPending: pending,
-        warming: !items.length && (Boolean(feed.meta.warming) || pending > 0),
+      ...feed, items: safeItems,
+      meta: { ...feed.meta, liveCount: safeItems.length, translationPending: pending,
+        warming: !safeItems.length && (Boolean(feed.meta.warming) || pending > 0),
       },
     };
     if (JSON.stringify(next) !== JSON.stringify(published)) {

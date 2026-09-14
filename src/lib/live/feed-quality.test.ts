@@ -35,3 +35,16 @@ it("fallback briefs contain source text, not generic implications or platform at
   const brief = makeBrief({ title: "Model demo", summary: "A source description", source: "YouTube", category: "Industry Trends" });
   expect(brief).toEqual({ whatHappened: "A source description", whyItMatters: "", potentialImpact: "", keyTakeaway: "" });
 });
+it("rejects Product Hunt navigation placeholders even if AI or cached translations rewrite them", () => {
+  const post = { ...base, source: "Product Hunt" as const, title: "Slashy Assistant", summary: "Discussion | Link" };
+  expect(enforceFeedQuality([post])).toEqual([]);
+  expect(enforceFeedQuality([{ ...post, originalSummary: post.summary, summary: "An innovative AI assistant for teams" }])).toEqual([]);
+  expect(enforceFeedQuality([{ ...post, summary: post.title }])).toEqual([]);
+});
+it("keeps real product descriptions but limits briefs to sourced facts", () => {
+  const post = { ...base, source: "Product Hunt" as const, title: "Assistant", summary: "An assistant that searches your team's documents." };
+  const [result] = enforceFeedQuality([post]);
+  expect(result.briefReadiness).toBe("factual-only");
+  expect(result.brief.whatHappened).toBe(post.summary);
+  expect(result.brief.potentialImpact).toBe("");
+});
