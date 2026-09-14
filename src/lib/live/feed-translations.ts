@@ -146,5 +146,7 @@ return translate;
 }
 const translators = { en: createTranslator("en"), zh: createTranslator("zh") };
 export async function getFeedTranslations(items: FeedItem[], locale: Locale = "zh", readOnly = false) {
-  return translators[locale](items, readOnly);
+  // Route handlers and instrumentation may use different module instances. Read
+  // the atomic disk snapshot without mutating an active worker's in-memory cache.
+  return readOnly ? createTranslator(locale)(items, true) : translators[locale](items);
 }

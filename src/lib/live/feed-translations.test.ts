@@ -159,3 +159,15 @@ it("cache-only readers do not start paid translation work", async () => {
   expect(result.readyIds).toEqual([]);
   expect(fetchMock).not.toHaveBeenCalled();
 });
+it("cache readers observe translations committed by a separate background module", async () => {
+  vi.stubGlobal("fetch", vi.fn());
+  const service = await import("./feed-translations");
+  expect((await service.getFeedTranslations([item], "zh", true)).readyIds).toEqual([]);
+  disk.readFile.mockResolvedValue(JSON.stringify({ [service.translationKey(item)]: {
+    locale: "zh", sourceTitle: item.title, sourceSummary: item.summary, title: "模型发布", summary: "一款新模型",
+  } }));
+  const result = await service.getFeedTranslations([item], "zh", true);
+  expect(result.readyIds).toEqual([item.id]);
+  expect(result.translations.one.title).toBe("模型发布");
+  expect(fetch).not.toHaveBeenCalled();
+});

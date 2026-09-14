@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export async function GET(req: NextRequest) {
   try {
     const force = req.nextUrl.searchParams.get("force") === "1";
-    const payload = await publishBilingualFeed(await getCachedFeed(getAggregatedFeed, { force }));
+    const payload = await publishBilingualFeed(await getCachedFeed(getAggregatedFeed, { force }), false);
     const maxAge = Math.round(FEED_TTL_MS / 1000);
 
     const cacheState = payload.meta.warming

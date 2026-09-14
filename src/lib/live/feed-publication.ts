@@ -17,7 +17,7 @@ export async function prepareBilingualFeed(feed: FeedPayload) {
 }
 
 /** Reads cached translations only; never waits for or starts a model request. */
-export async function publishBilingualFeed(feed: FeedPayload): Promise<FeedPayload> {
+export async function publishBilingualFeed(feed: FeedPayload, persist = true): Promise<FeedPayload> {
   // Serialize publication so an older disk write cannot overwrite a newer one.
   const result = serial.then(async () => {
     loaded ??= (async () => {
@@ -54,9 +54,11 @@ export async function publishBilingualFeed(feed: FeedPayload): Promise<FeedPaylo
       },
     };
     if (JSON.stringify(next) !== JSON.stringify(published)) {
-      await mkdir(getCacheDir(), { recursive: true });
-      await writeFile(`${file()}.${process.pid}.tmp`, JSON.stringify(next));
-      await rename(`${file()}.${process.pid}.tmp`, file());
+      if (persist) {
+        await mkdir(getCacheDir(), { recursive: true });
+        await writeFile(`${file()}.${process.pid}.tmp`, JSON.stringify(next));
+        await rename(`${file()}.${process.pid}.tmp`, file());
+      }
       published = next;
     }
     return next;

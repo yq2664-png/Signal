@@ -9,8 +9,6 @@ import {
   resetFeedCacheForTests,
 } from "@/lib/live/feed-cache";
 
-vi.mock("./feed-publication", () => ({ prepareBilingualFeed: vi.fn().mockResolvedValue(undefined) }));
-
 function samplePayload(title = "Live item"): FeedPayload {
   return {
     items: [
@@ -217,4 +215,15 @@ describe("getCachedFeed request budget", () => {
     });
     expect(fetchFresh).toHaveBeenCalledOnce();
   });
+  it("observes a newer snapshot written by another server module", async () => {
+    await getCachedFeed(async () => samplePayload("First"));
+    writeFileSync(path.join(dir, "feed-snapshot.json"), JSON.stringify({
+      fetchedAt: new Date(Date.now() + 1000).toISOString(), payload: samplePayload("Background update"),
+    }));
+    const fetchFresh = vi.fn();
+    const next = await getCachedFeed(fetchFresh);
+    expect(next.items[0].title).toBe("Background update");
+    expect(fetchFresh).not.toHaveBeenCalled();
+  });
+
 });
