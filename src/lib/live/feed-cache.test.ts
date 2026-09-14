@@ -9,6 +9,8 @@ import {
   resetFeedCacheForTests,
 } from "@/lib/live/feed-cache";
 
+vi.mock("./feed-publication", () => ({ prepareBilingualFeed: vi.fn().mockResolvedValue(undefined) }));
+
 function samplePayload(title = "Live item"): FeedPayload {
   return {
     items: [

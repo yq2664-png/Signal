@@ -101,7 +101,7 @@ export function FeedProvider({ children }: { children: ReactNode }) {
           return;
         }
 
-        if (stillWarming) {
+        if (stillWarming && !payload.meta.translationPending) {
           setError("Feed is still building");
         }
 
@@ -124,6 +124,9 @@ export function FeedProvider({ children }: { children: ReactNode }) {
         warmingTries.current = 0;
         setLoading(false);
         setRefreshing(false);
+        if (payload.meta.translationPending) {
+          retryTimer = setTimeout(() => setTick(t => t + 1), 15_000);
+        }
       })
       .catch((err: unknown) => {
         if (cancelled) return;
@@ -148,6 +151,7 @@ export function FeedProvider({ children }: { children: ReactNode }) {
         }
         setLoading(false);
         setRefreshing(false);
+        retryTimer = setTimeout(() => setTick(t => t + 1), 30_000);
       })
       .finally(() => {
         clearTimeout(abortTimer);

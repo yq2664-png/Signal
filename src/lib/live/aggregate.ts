@@ -18,6 +18,7 @@ import type { CommunitySignal, FeedItem, Insight } from "@/lib/types";
 import { sortFeed } from "@/lib/utils";
 
 export type FeedMeta = {
+  translationPending?: number;
   liveCount: number;
   enrichedCount: number;
   enrichCacheHits: number;

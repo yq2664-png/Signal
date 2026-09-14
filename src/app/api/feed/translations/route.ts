@@ -7,7 +7,7 @@ export async function GET(request: Request) {
   try {
     const feed = await getCachedFeed(getAggregatedFeed);
     const locale = new URL(request.url).searchParams.get("locale") === "en" ? "en" : "zh";
-    const result = await getFeedTranslations(feed.items, locale);
+    const result = await getFeedTranslations(feed.items, locale, true);
     return NextResponse.json({ ...result, pending: result.pending || Boolean(feed.meta.warming) }, { headers: { "Cache-Control": "private, no-store" } });
   } catch {
     return NextResponse.json({ translations: {}, pending: false }, { status: 503 });

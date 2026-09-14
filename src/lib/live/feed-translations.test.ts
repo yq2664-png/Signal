@@ -152,3 +152,10 @@ it("requeues cached titles that are still in the wrong language", async () => {
   expect(result.remaining).toBe(1);
   expect(fetchMock).toHaveBeenCalledTimes(1);
 });
+it("cache-only readers do not start paid translation work", async () => {
+  const fetchMock = vi.fn(); vi.stubGlobal("fetch", fetchMock);
+  const { getFeedTranslations } = await import("./feed-translations");
+  const result = await getFeedTranslations([item], "zh", true);
+  expect(result.readyIds).toEqual([]);
+  expect(fetchMock).not.toHaveBeenCalled();
+});

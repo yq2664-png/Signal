@@ -43,3 +43,11 @@ it("uses English translations for Chinese posts, never a Chinese cache entry", (
   expect(localizeItem(post, "zh", en)).toBe(post);
   expect(translateUI("量子位", "en")).toBe("QbitAI");
 });
+
+it("uses the bilingual revision embedded in a post without a translation request", () => {
+  const post = { id: "embedded", title: "Original", summary: "Source", translations: {
+    zh: { title: "中文标题", summary: "中文摘要" }, en: { title: "English title", summary: "English summary" },
+  } } as FeedItem;
+  expect(localizeItem(post, "zh", {}).title).toBe("中文标题");
+  expect(localizeItem(post, "en", {}).title).toBe("English title");
+});

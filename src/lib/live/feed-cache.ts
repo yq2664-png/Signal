@@ -1,3 +1,4 @@
+import { prepareBilingualFeed } from "./feed-publication";
 import { enforceFeedQuality } from "./feed-quality";
 import { mkdir, readFile, rename, writeFile } from "fs/promises";
 import path from "path";
@@ -158,6 +159,7 @@ async function runFetch(
     const fetchedAtMs = Date.now();
     const entry: MemoryEntry = { fetchedAtMs, payload };
     memory = entry;
+    void prepareBilingualFeed(withCacheMeta(payload, fetchedAtMs, false)).catch(error => console.error("[feed-prepare]", error));
     await saveDisk(entry).catch((err) => {
       console.error("[feed-cache] failed to persist snapshot", err);
     });

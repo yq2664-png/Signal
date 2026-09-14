@@ -442,6 +442,8 @@ export interface CommunitySignal {
 }
 
 export interface FeedItem {
+  /** Complete, source-matched translations published together with this revision. */
+  translations?: Partial<Record<"en" | "zh", { title: string; summary: string; brief?: FeedItem["brief"] }>>;
   id: string;
   title: string;
   source: Source;

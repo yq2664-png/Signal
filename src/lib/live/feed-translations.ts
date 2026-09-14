@@ -101,12 +101,12 @@ async function attemptBatch(items: FeedItem[]) {
     return items;
   }
 }
-async function translate(items: FeedItem[]) {
+async function translate(items: FeedItem[], readOnly = false) {
   await load();
   const missing = [...new Map(items.filter(needsTranslation).map(item => [translationKey(item), item])).values()];
   const eligible = missing.filter(item => (failedUntil.get(translationKey(item)) ?? 0) <= Date.now());
   const enabled = Boolean(process.env.OPENAI_API_KEY?.trim());
-  if (enabled && eligible.length && !inflight && Date.now() >= retryAt) {
+  if (!readOnly && enabled && eligible.length && !inflight && Date.now() >= retryAt) {
     inflight = (async () => {
       // One worker per server; readers never wait on model calls.
       const failed: FeedItem[] = [];
@@ -138,12 +138,13 @@ async function translate(items: FeedItem[]) {
     remaining: missing.length,
     retryAfterMs: Math.max(0, retryAt - Date.now()),
     available: enabled,
+    readyIds: items.filter(item => !needsTranslation(item)).map(item => item.id),
   };
 }
 
 return translate;
 }
 const translators = { en: createTranslator("en"), zh: createTranslator("zh") };
-export async function getFeedTranslations(items: FeedItem[], locale: Locale = "zh") {
-  return translators[locale](items);
+export async function getFeedTranslations(items: FeedItem[], locale: Locale = "zh", readOnly = false) {
+  return translators[locale](items, readOnly);
 }

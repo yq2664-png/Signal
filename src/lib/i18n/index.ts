@@ -7,6 +7,8 @@ export function resolveLocale(saved: string | null, browser: string): Locale {
   return saved === "en" || saved === "zh" ? saved : browser.toLowerCase().startsWith("zh") ? "zh" : "en";
 }
 export function localizeItem(item: FeedItem, locale: Locale, translations: Translations): FeedItem {
+  const embedded = item.translations?.[locale];
+  if (embedded) return { ...item, ...embedded };
   const entry = translations[item.id];
   if (!entry || (entry.locale ?? "zh") !== locale || entry.sourceTitle !== item.title || entry.sourceSummary !== item.summary) return item;
   const briefMatches = entry.sourceBrief && entry.brief && briefFields.every(field => entry.sourceBrief?.[field] === item.brief?.[field]);

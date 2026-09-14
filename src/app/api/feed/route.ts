@@ -2,12 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAggregatedFeed } from "@/lib/live/aggregate";
 import { FEED_TTL_MS, getCachedFeed } from "@/lib/live/feed-cache";
 
+import { publishBilingualFeed } from "@/lib/live/feed-publication";
+
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {
     const force = req.nextUrl.searchParams.get("force") === "1";
-    const payload = await getCachedFeed(getAggregatedFeed, { force });
+    const payload = await publishBilingualFeed(await getCachedFeed(getAggregatedFeed, { force }));
     const maxAge = Math.round(FEED_TTL_MS / 1000);
 
     const cacheState = payload.meta.warming
@@ -17,7 +19,7 @@ export async function GET(req: NextRequest) {
         : "MISS";
 
     const skipStore =
-      force || payload.meta.warming || payload.meta.pendingRefresh;
+      force || payload.meta.warming || payload.meta.pendingRefresh || Boolean(payload.meta.translationPending);
 
     return NextResponse.json(payload, {
       headers: {
