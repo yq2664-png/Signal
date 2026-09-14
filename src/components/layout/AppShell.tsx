@@ -14,7 +14,7 @@ export function AppShell({
   subtitle?: string;
   actions?: ReactNode;
 }) {
-  const { locale, setLocale, t } = useLanguage();
+  const { locale, setLocale, t, translationState } = useLanguage();
   return (
     <div className="flex h-screen overflow-hidden bg-[var(--bg)]">
       <Sidebar />
@@ -35,12 +35,21 @@ export function AppShell({
           </div>
           <div className="flex shrink-0 items-center gap-2">
             {actions}
-            <div role="group" aria-label={locale === "zh" ? "界面语言" : "Language"} className="flex rounded-md border border-[var(--border)] p-0.5 text-xs">
-              {(["zh", "en"] as const).map((value) => (
-                <button key={value} type="button" lang={value === "zh" ? "zh-CN" : "en"} aria-pressed={locale === value} onClick={() => setLocale(value)} className={`rounded px-2 py-1 ${locale === value ? "bg-[var(--bg-active)] text-[var(--text-primary)]" : "text-[var(--text-muted)]"}`}>
-                  {value === "zh" ? "中文" : "EN"}
-                </button>
-              ))}
+            <div className="flex items-center gap-2">
+              {translationState !== "ready" ? (
+                <span role="status" className="hidden text-[10px] text-[var(--text-secondary)] sm:inline">
+                  {translationState === "retrying" ? (locale === "zh" ? "译文重试中" : "Retrying translation") : (locale === "zh" ? "译文准备中" : "Translating")}
+                </span>
+              ) : null}
+              <div role="group" aria-label={locale === "zh" ? "语言，当前为中文" : "Language, English selected"} className="language-glass">
+                <span aria-hidden="true" className="language-glass-selection" style={{ transform: `translateX(${locale === "en" ? "100%" : "0"})` }} />
+                {(["zh", "en"] as const).map((value) => (
+                  <button key={value} type="button" lang={value === "zh" ? "zh-CN" : "en"} aria-pressed={locale === value} onClick={() => setLocale(value)} className="language-glass-option">
+                    <span aria-hidden="true" className="language-glass-check">{locale === value ? "✓" : ""}</span>
+                    {value === "zh" ? "中文" : "EN"}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </header>

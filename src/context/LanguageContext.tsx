@@ -5,9 +5,11 @@ import type { FeedItem } from "@/lib/types";
 const LanguageContext = createContext<{
   locale: Locale; setLocale: (locale: Locale) => void; t: (text: string) => string;
   localize: (item: FeedItem) => FeedItem;
+  translationState: "loading" | "ready" | "retrying";
 } | null>(null);
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [locale, updateLocale] = useState<Locale>("en");
+  const [states, setStates] = useState<Record<Locale, "loading" | "ready" | "retrying">>({ en: "loading", zh: "loading" });
   const [translations, setTranslations] = useState<Record<Locale, Translations>>({ en: {}, zh: {} });
   useEffect(() => {
     let saved = null;
@@ -24,16 +26,20 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout>;
-    const controller = new AbortController();
+    let controller: AbortController;
     const poll = async () => {
+      controller = new AbortController();
       let delay = 60_000;
+      const timeout = setTimeout(() => controller.abort(), 15_000);
       try {
         const response = await fetch(`/api/feed/translations?locale=${locale}`, { signal: controller.signal, cache: "no-store" });
         if (!response.ok) throw new Error("Translation unavailable");
         const data = await response.json();
         if (!cancelled) setTranslations(previous => ({ ...previous, [locale]: { ...previous[locale], ...(data.translations ?? {}) } }));
-        if (data.pending) delay = 5_000;
-      } catch { /* original text remains available */ }
+        if (!cancelled) setStates(previous => ({ ...previous, [locale]: !data.available || data.retryAfterMs > 0 ? "retrying" : data.pending ? "loading" : "ready" }));
+        if (data.pending) delay = Math.max(5_000, Math.min(data.retryAfterMs || 0, 60_000));
+      } catch { if (!cancelled) setStates(previous => ({ ...previous, [locale]: "retrying" })); }
+      finally { clearTimeout(timeout); }
       if (!cancelled) timer = setTimeout(poll, delay);
     };
     void poll();
@@ -41,7 +47,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   }, [locale]);
   const t = useCallback((text: string) => translateUI(text, locale), [locale]);
   const localize = useCallback((item: FeedItem) => localizeItem(item, locale, translations[locale]), [locale, translations]);
-  const value = useMemo(() => ({ locale, setLocale, t, localize }), [locale, setLocale, t, localize]);
+  const translationState = states[locale];
+  const value = useMemo(() => ({ locale, setLocale, t, localize, translationState }), [locale, setLocale, t, localize, translationState]);
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }
 export function useLanguage() {

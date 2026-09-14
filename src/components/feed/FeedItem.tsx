@@ -111,7 +111,9 @@ export function ImpactBriefPanel({
   item: FeedItem;
 }) {
   const { t, locale, localize } = useLanguage();
-  const [showOriginal, setShowOriginal] = useState(false);
+  const [originalMode, setOriginalMode] = useState({ locale, enabled: false });
+  if (originalMode.locale !== locale) setOriginalMode({ locale, enabled: false });
+  const showOriginal = originalMode.locale === locale && originalMode.enabled;
   const displayItem = showOriginal ? item : localize(item);
   const readiness = resolveBriefReadiness(item);
   const brief = presentBrief(displayItem.brief);
@@ -149,7 +151,7 @@ export function ImpactBriefPanel({
         </div>
         <div className="mt-4 flex flex-wrap items-center gap-2">
           {localize(item) !== item ? (
-            <Button variant="subtle" onClick={() => setShowOriginal(value => !value)}>{t(showOriginal ? "Show translation" : "Show original")}</Button>
+            <Button variant="subtle" onClick={() => setOriginalMode({ locale, enabled: !showOriginal })}>{t(showOriginal ? "Show translation" : "Show original")}</Button>
           ) : null}
           <Button
             variant="primary"

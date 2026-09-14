@@ -9,6 +9,17 @@ export function translationKey(item: Pick<FeedItem, "title" | "summary">) {
   return createHash("sha256").update(JSON.stringify([item.title, item.summary])).digest("hex");
 }
 
+class TranslationServiceError extends Error {
+  constructor(readonly status: number) { super(`Translation API ${status}`); }
+}
+
+// Catch obvious untranslated prose while allowing short product names and identifiers.
+export function wrongTranslationLanguage(text: string, locale: Locale): boolean {
+  const prose = text.replace(/https?:\/\/\S+|[#@]\S+|`[^`]*`/g, "");
+  if (locale === "en") return /[\u4e00-\u9fff\u3040-\u30ff\uac00-\ud7af]{2}/u.test(prose);
+  return !/[\u4e00-\u9fff]/u.test(prose) && (prose.match(/[A-Za-z]+/g)?.length ?? 0) >= 5;
+}
+
 function createTranslator(locale: Locale) {
 let entries: Record<string, Translation> = {};
 let initialized: Promise<void> | undefined;
@@ -19,6 +30,7 @@ const cachePath = () => path.join(getCacheDir(), `feed-translations-${locale}-v1
 function needsTranslation(item: FeedItem): boolean {
   const entry = entries[translationKey(item)];
   if (!entry) return true;
+  if ([entry.title, entry.summary, ...Object.values(entry.brief ?? {})].some(text => wrongTranslationLanguage(text, locale))) return true;
   return Boolean(item.brief && briefFields.some(field => entry.sourceBrief?.[field] !== item.brief[field] || typeof entry.brief?.[field] !== "string"));
 }
 async function load() {
@@ -49,7 +61,7 @@ async function translateBatch(items: FeedItem[]) {
       ],
     }),
   });
-  if (!response.ok) throw new Error(`Translation API ${response.status}`);
+  if (!response.ok) throw new TranslationServiceError(response.status);
   const data = await response.json();
   const result = JSON.parse(data.choices?.[0]?.message?.content ?? "{}");
   if (!Array.isArray(result.items)) throw new Error("Invalid translation response");
@@ -67,6 +79,7 @@ async function translateBatch(items: FeedItem[]) {
       // Only keep known fields; never invent text for a deliberately empty section.
       output.brief = Object.fromEntries(briefFields.map(field => [field, source[field].trim() ? output.brief[field].trim() : ""]));
     }
+    if ([output.title, output.summary, ...briefFields.map(field => output.brief?.[field] ?? "")].some(text => wrongTranslationLanguage(text, locale))) { failed.push(item); continue; }
     batch[translationKey(item)] = { locale, sourceTitle: item.title, sourceSummary: item.summary, title: output.title, summary: output.summary, ...(item.brief ? { sourceBrief: item.brief, brief: output.brief } : {}) };
   }
   Object.assign(entries, batch);
@@ -78,6 +91,16 @@ async function translateBatch(items: FeedItem[]) {
   await rename(`${cachePath()}.tmp`, cachePath());
   return failed;
 }
+async function attemptBatch(items: FeedItem[]) {
+  try { return await translateBatch(items); }
+  catch (error) {
+    // Authentication/quota errors affect the whole service. A slow or malformed
+    // response affects only this batch, and must not starve the rest of the feed.
+    if (error instanceof TranslationServiceError && [401, 403, 429].includes(error.status)) throw error;
+    console.warn("[feed-translations] retrying batch", error instanceof Error ? error.message : "failed");
+    return items;
+  }
+}
 async function translate(items: FeedItem[]) {
   await load();
   const missing = [...new Map(items.filter(needsTranslation).map(item => [translationKey(item), item])).values()];
@@ -88,12 +111,12 @@ async function translate(items: FeedItem[]) {
       // One worker per server; readers never wait on model calls.
       const failed: FeedItem[] = [];
       // Finish all queued posts, retaining successful rows even in partial responses.
-      for (let i = 0; i < eligible.length; i += 10) {
-        failed.push(...await translateBatch(eligible.slice(i, i + 10)));
+      for (let i = 0; i < eligible.length; i += 3) {
+        failed.push(...await attemptBatch(eligible.slice(i, i + 3)));
       }
       // Retry incomplete rows alone after the rest of the feed, avoiding starvation.
       for (const item of failed) {
-        const remaining = await translateBatch([item]);
+        const remaining = await attemptBatch([item]);
         if (remaining.length) failedUntil.set(translationKey(item), Date.now() + 60_000);
       }
       for (const [key, until] of failedUntil) {
@@ -109,7 +132,13 @@ async function translate(items: FeedItem[]) {
     const entry = entries[translationKey(item)];
     if (entry) translations[item.id] = entry;
   }
-  return { translations, pending: enabled && (Boolean(inflight) || eligible.length > 0) && Date.now() >= retryAt };
+  return {
+    translations,
+    pending: enabled && missing.length > 0,
+    remaining: missing.length,
+    retryAfterMs: Math.max(0, retryAt - Date.now()),
+    available: enabled,
+  };
 }
 
 return translate;

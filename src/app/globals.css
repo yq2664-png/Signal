@@ -256,3 +256,32 @@ select {
 ::-webkit-scrollbar-thumb:hover {
   background: #3a3d44;
 }
+
+/* Frosted segmented language control; preserve the existing compact radii. */
+.language-glass {
+  position: relative; display: flex; isolation: isolate; padding: 3px;
+  border: 1px solid rgba(220, 235, 255, .27); border-radius: 6px;
+  background: linear-gradient(145deg, rgba(210,230,255,.14), rgba(255,255,255,.035));
+  backdrop-filter: blur(20px) saturate(150%); -webkit-backdrop-filter: blur(20px) saturate(150%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 3px 12px rgba(0,0,0,.22);
+}
+.language-glass-selection {
+  position: absolute; top: 3px; bottom: 3px; left: 3px; width: calc((100% - 6px) / 2);
+  border-radius: 4px; border: 1px solid rgba(255,255,255,.7);
+  background: linear-gradient(145deg, rgba(244,250,255,.95), rgba(178,201,223,.88));
+  box-shadow: inset 0 1px 1px white, 0 1px 5px rgba(0,0,0,.3);
+  transition: transform 180ms ease-out; pointer-events: none;
+}
+.language-glass-option {
+  position: relative; z-index: 1; display: flex; align-items: center; justify-content: center;
+  gap: 4px; width: 58px; min-height: 28px; border-radius: 4px;
+  font-size: 12px; font-weight: 500; color: #b9c1cb; cursor: pointer;
+  transition: color 180ms ease-out;
+}
+.language-glass-option[aria-pressed="true"] { color: #172331; font-weight: 700; }
+.language-glass-option:hover[aria-pressed="false"] { color: white; }
+.language-glass-option:focus-visible { outline: 2px solid #8cc8ff; outline-offset: 3px; }
+.language-glass-check { width: 9px; font-size: 10px; }
+@media (prefers-reduced-motion: reduce) {
+  .language-glass-selection, .language-glass-option { transition: none; }
+}
