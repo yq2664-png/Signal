@@ -39,9 +39,10 @@ export function TierBadge({
 }
 
 export function CategoryBadge({ category }: { category: string }) {
+  const { t } = useLanguage();
   return (
     <Badge className="bg-[rgba(255,255,255,0.05)] text-[var(--text-secondary)]">
-      {category}
+      {t(category)}
     </Badge>
   );
 }

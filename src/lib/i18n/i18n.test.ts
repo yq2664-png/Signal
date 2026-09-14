@@ -51,3 +51,15 @@ it("uses the bilingual revision embedded in a post without a translation request
   expect(localizeItem(post, "zh", {}).title).toBe("中文标题");
   expect(localizeItem(post, "en", {}).title).toBe("English title");
 });
+
+it("translates topic chips and compound labels while preserving names and identifiers", () => {
+  expect(translateUI("Arms / Manipulators", "zh")).toBe("机械臂 / 操作器");
+  expect(translateUI("Humanoid-robots", "zh")).toBe("人形机器人");
+  expect(translateUI("cs.AI · Agents", "zh")).toBe("cs.AI · 智能体");
+  expect(translateUI("OpenAI · Official", "zh")).toBe("OpenAI · 官方");
+  expect(translateUI("3 official sources", "zh")).toBe("3 个官方来源");
+  expect(translateUI("FRICTION · 9 evidence · 3d", "zh")).toBe("使用障碍 · 9 条证据 · 3 天");
+  expect(translateUI("Arms / Manipulators", "en")).toBe("Arms / Manipulators");
+  expect(translateUI("Python", "zh")).toBe("Python");
+  expect(translateUI("Brianna Wessling", "zh")).toBe("Brianna Wessling");
+});

@@ -576,6 +576,7 @@ function NewsCard({
 }
 
 function LabCard({ item }: { item: FeedItem }) {
+  const { t } = useLanguage();
   return (
     <div>
       <SafeImage
@@ -587,7 +588,7 @@ function LabCard({ item }: { item: FeedItem }) {
         {item.native?.subtitle ? (
           <div className="relative flex w-full items-center justify-end">
             <span className="truncate text-[10px] text-white/80">
-              {item.native.subtitle}
+              {t(item.native.subtitle)}
             </span>
           </div>
         ) : null}
@@ -599,7 +600,7 @@ function LabCard({ item }: { item: FeedItem }) {
         {item.summary}
       </p>
       <div className="mt-2 text-[11px] text-[var(--text-muted)]">
-        {item.source}
+        {t(item.source)}
         <PublishedLabel at={item.publishedAt} prefix=" · " />
       </div>
     </div>
@@ -707,7 +708,7 @@ function PaperCard({
               className="rounded-[4px] px-1.5 py-0.5 font-medium"
               style={{ background: `${accent}22`, color: accent }}
             >
-              {chip}
+              {t(chip)}
             </span>
           ))
         ) : (

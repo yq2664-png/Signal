@@ -14,6 +14,25 @@ export function localizeItem(item: FeedItem, locale: Locale, translations: Trans
   const briefMatches = entry.sourceBrief && entry.brief && briefFields.every(field => entry.sourceBrief?.[field] === item.brief?.[field]);
   return { ...item, title: entry.title, summary: entry.summary, ...(briefMatches ? { brief: entry.brief } : {}) };
 }
+// Editorial topics are UI labels, translated immediately without a model call.
+const topicLabels: Record<string, string> = {
+  "Arms / Manipulators": "机械臂 / 操作器", "Actuators / Motors / Servos": "执行器 / 电机 / 伺服",
+  "Humanoid-robots": "人形机器人", "Medical-robots": "医疗机器人", "Video-friday": "每周机器人视频",
+  "Robotics": "机器人", "Agriculture": "农业", "Artificial Intelligence / Cognition": "人工智能 / 认知",
+  "Machine Learning & Data Science": "机器学习与数据科学", "Climate change and energy": "气候变化与能源",
+  "Artificial intelligence": "人工智能", "Agents": "智能体", "Agent": "智能体", "Embodied": "具身智能",
+  "Trust": "可信与安全", "Eval": "评测", "Product": "产品", "Improvement": "功能改进",
+  "Research Papers": "研究论文", "Model Releases": "模型发布", "AI Products": "AI 产品",
+  "Industry Trends": "行业趋势", "Tools": "工具", "China": "中国", "The Download": "每日科技速览",
+  "Automation": "自动化", "Autonomous Vehicles": "自动驾驶", "Autonomous vehicles": "自动驾驶",
+  "Mobile Robots": "移动机器人", "Mobile-robots": "移动机器人", "Cobots": "协作机器人",
+  "Drones": "无人机", "Sensors": "传感器", "Manufacturing": "制造业", "Logistics": "物流",
+  "Industrial Robots": "工业机器人", "Industrial-robots": "工业机器人", "Software": "软件",
+  "Hardware": "硬件", "Business": "商业", "News": "资讯", "Safety": "安全", "Security": "安全",
+  "Reinforcement Learning": "强化学习", "Computer Vision": "计算机视觉", "Natural Language Processing": "自然语言处理",
+  "Funding": "融资", "Startups": "初创公司", "Open Source": "开源", "Official": "官方",
+  "FRICTION": "使用障碍", "UNEXPECTED_USE": "新用法",
+};
 export const zh: Record<string, string> = {
   "Developer Community": "开发者社区", "Foreign Media": "海外媒体", "Tech Blog": "技术博客",
   "GitHub · Articles": "GitHub · 文章", "GitHub · Skills": "GitHub · 技能", "GitHub · Projects": "GitHub · 项目",
@@ -97,7 +116,15 @@ export const zh: Record<string, string> = {
 export function translateUI(text: string, locale: Locale): string {
   if (locale === "en") return ({ "量子位": "QbitAI", "新智元": "AI Era", "机器之心": "Synced", "资讯": "News", "研究": "Research", "技能": "Skill" } as Record<string, string>)[text] ?? text;
   if (zh[text]) return zh[text];
-  if (text.startsWith("Flagged · ")) return `已反馈 · ${translateUI(text.slice(10), locale)}`;
-  return text.replace(/^(\d+) liked · synced to /, "$1 条喜欢 · 已同步至 ")
+  const topic = Object.keys(topicLabels).find(key => key.toLowerCase() === text.trim().toLowerCase());
+  if (topic) return topicLabels[topic];
+  const libraryLabel = text.replace(/^(\d+) liked · synced to /, "$1 条喜欢 · 已同步至 ")
     .replace(/^(\d+) saved · synced to /, "$1 条收藏 · 已同步至 ");
+  if (libraryLabel !== text) return libraryLabel;
+  if (text.includes(" · ")) return text.split(" · ").map(part => translateUI(part, locale)).join(" · ");
+  if (/^\d+ official sources?$/.test(text)) return text.replace(/ official sources?$/, " 个官方来源");
+  if (/^\d+ evidence$/.test(text)) return text.replace(/ evidence$/, " 条证据");
+  if (/^\d+d$/.test(text)) return text.replace(/d$/, " 天");
+  if (text.startsWith("Flagged · ")) return `已反馈 · ${translateUI(text.slice(10), locale)}`;
+  return text;
 }
