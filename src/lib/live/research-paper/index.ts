@@ -1,3 +1,4 @@
+import { retainResearchOnFailure } from "./last-good";
 import { fetchArxivByIds, type ArxivCanonical } from "@/lib/live/research-paper/arxiv-atom";
 import {
   DEFAULT_WINDOW_DAYS,
@@ -80,7 +81,7 @@ function mergePaper(
       canonical?.publishedAt ||
       captured.publishedAt ||
       captured.hfSubmittedAt ||
-      new Date().toISOString(),
+      "",
     hfSubmittedAt: captured.hfSubmittedAt,
     githubUrl: captured.githubUrl,
     demoUrl: captured.demoUrl,
@@ -153,8 +154,7 @@ export function unionCaptures(
 ): HfCaptureRecord[] {
   const merged = [...hf, ...venue].map((record) => ({
     ...record,
-    publishedAt:
-      record.publishedAt || record.hfSubmittedAt || new Date().toISOString(),
+    publishedAt: record.publishedAt || record.hfSubmittedAt || "",
   }));
   return deterministicDedupe(merged).unique;
 }
@@ -251,6 +251,7 @@ export function buildResearchPapers(
   const passed: Array<{
     paper: ResearchPaper;
     cue: NonNullable<ReturnType<typeof qualifyResearchPaper>["cue"]>;
+    productImplication?: boolean;
   }> = [];
 
   for (const paper of unique) {
@@ -299,6 +300,7 @@ export function buildResearchPapers(
     passed.push({
       paper,
       cue: decision.cue ?? "Agents",
+      productImplication: decision.productImplication,
     });
   }
 
@@ -336,8 +338,8 @@ export function buildResearchPapers(
     watch.push(fromPaper(item.paper, "watch", "capped", "capped"));
   }
 
-  const items = published.map(({ paper, cue }) =>
-    researchPaperToFeedItem(paper, cue)
+  const items = published.map(({ paper, cue, productImplication }) =>
+    researchPaperToFeedItem(paper, cue, { productImplication })
   );
 
   return {
@@ -454,7 +456,9 @@ export async function fetchResearchPaperFeedItems(options?: {
       paper.institution = paper.institution || detail.institution;
       paper.stars = paper.stars ?? detail.stars;
       enriched.push(
-        researchPaperToFeedItem(paper, item.researchPaper?.relevanceCue)
+        researchPaperToFeedItem(paper, item.researchPaper?.relevanceCue, {
+          productImplication: item.researchPaper?.productImplication,
+        })
       );
     } catch (error) {
       errors.push(sanitizeDiagnosticError(error));
@@ -471,8 +475,9 @@ export async function fetchResearchPaperFeedItems(options?: {
     ]).catch(() => undefined);
   }
 
+  const publishedItems = await retainResearchOnFailure(enriched, { degraded: errors.length > 0, now, cap: publishCap, windowDays });
   return {
-    data: enriched,
+    data: publishedItems,
     errors,
     diagnosticsRunId: built.diagnostics.runId,
     capture: {
@@ -481,7 +486,7 @@ export async function fetchResearchPaperFeedItems(options?: {
       venueFiltered: venueFiltered.length,
       watch: built.watch.length,
       reviewQueue: built.reviewQueue.length + venueFiltered.length,
-      published: enriched.length,
+      published: publishedItems.length,
     },
   };
 }

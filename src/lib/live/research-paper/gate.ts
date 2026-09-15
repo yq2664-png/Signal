@@ -2,6 +2,10 @@ import type {
   ResearchPaperGateReason,
   ResearchPaperRelevanceCue,
 } from "@/lib/types";
+import {
+  matchTaxonomy,
+  type TaxonomyTopic,
+} from "@/lib/live/research-paper/taxonomy";
 
 export const THEORY_CUE =
   /\b(calibration dimension|convex calibration|jaccard measure|m[oö]bius inversion|vc class(?:es)?|sample complexity|hypothesis class|brier score|online boosting|weak-to-strong|rademacher|pac[- ]learn|generalization bound|learning theory|affine dimension|minhash gram)\b/i;
@@ -15,6 +19,7 @@ export const INFRA_CUE =
 export const SMALL_MODEL_REPORT_CUE =
   /\b(1[- ]?billion[- ]parameter|1b parameters?|trained from scratch|permissible post-training|pretraining corpus|pedagogically controlled)\b/i;
 
+/** Narrow product-experience phrases (original R4). These can exempt a paper from R3. */
 export const EXPERIENCE_CUES: Array<{
   cue: ResearchPaperRelevanceCue;
   pattern: RegExp;
@@ -54,6 +59,16 @@ export const EXPERIENCE_CUES: Array<{
   },
 ];
 
+const TAXONOMY_TO_CUE: Partial<Record<TaxonomyTopic, ResearchPaperRelevanceCue>> =
+  {
+    agents: "Agents",
+    "human-ai-interaction": "HCI",
+    "generative-ui": "Generative UI",
+    multimodal: "Multimodal",
+    "trust-eval": "Trust",
+    embodied: "Embodied",
+  };
+
 export const IMPLICATION_CUE =
   /\b(production[- ]ready|digital products?|multi[- ]session|people with disabilit|protection mechanisms?|real[- ]time.{0,48}editing|long[- ]form speech|synchronized audiovisual|human expertise|simulated[- ]user|testing AI systems and digital products)\b/i;
 
@@ -65,6 +80,8 @@ export type GateDecision = {
   passCandidate: boolean;
   reason?: ResearchPaperGateReason;
   cue?: ResearchPaperRelevanceCue;
+  /** R5: product-implication tag. Not a publish kill switch. */
+  productImplication?: boolean;
 };
 
 function haystack(title: string, abstract: string): string {
@@ -86,26 +103,41 @@ export function matchExperienceCue(
   return EXPERIENCE_CUES.find((item) => item.pattern.test(text))?.cue;
 }
 
+export function matchTaxonomyCue(
+  title: string,
+  abstract: string
+): ResearchPaperRelevanceCue | undefined {
+  const match = matchTaxonomy(title, abstract);
+  for (const topic of match.userFacing) {
+    const cue = TAXONOMY_TO_CUE[topic];
+    if (cue) return cue;
+  }
+  return undefined;
+}
+
 export function qualifyResearchPaper(
   title: string,
   abstract: string
 ): GateDecision {
   const text = haystack(title, abstract);
+  const narrowExperience = matchExperienceCue(title, abstract);
+  const taxonomyExperience = matchTaxonomyCue(title, abstract);
+  const experience = narrowExperience ?? taxonomyExperience;
 
   if (THEORY_CUE.test(text) && !USER_OR_INTERFACE_CUE.test(text)) {
     return { publish: false, passCandidate: false, reason: "r1-theory" };
   }
 
-  const experience = matchExperienceCue(title, abstract);
-
   if (INFRA_CUE.test(text) && !experience) {
     return { publish: false, passCandidate: false, reason: "r2-infra" };
   }
 
+  // Benchmarks / small-model reports still need a narrow product cue, not just
+  // a taxonomy word like "multimodal" in the title.
   if (
     (isBenchmarkContribution(title, abstract) ||
       SMALL_MODEL_REPORT_CUE.test(text)) &&
-    !experience
+    !narrowExperience
   ) {
     return { publish: false, passCandidate: false, reason: "r3-incremental" };
   }
@@ -114,17 +146,13 @@ export function qualifyResearchPaper(
     return { publish: false, passCandidate: false, reason: "r6-else" };
   }
 
-  const hasImplication =
+  const productImplication =
     IMPLICATION_CUE.test(text) && !RESEARCHER_ONLY_CUE.test(text);
 
-  if (hasImplication) {
-    return { publish: true, passCandidate: true, cue: experience };
-  }
-
   return {
-    publish: false,
+    publish: true,
     passCandidate: true,
-    reason: "r6-else",
     cue: experience,
+    productImplication,
   };
 }

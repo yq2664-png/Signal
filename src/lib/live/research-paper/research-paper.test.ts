@@ -95,11 +95,19 @@ describe("Research Paper frozen validation set", () => {
       if (fixture.expectedLabel === "PASS") {
         expect(published, fixture.arxivId).toBe(true);
         expect(decision.passCandidate).toBe(true);
-      } else {
+      } else if (fixture.expectedLabel === "FAIL") {
         expect(published, `${fixture.expectedLabel} ${fixture.arxivId}`).toBe(
           false
         );
         expect(decision.reason, fixture.arxivId).toBe(fixture.expectedReason);
+      } else {
+        // BORDERLINE: still unpublished unless R4 taxonomy now qualifies it.
+        if (published) {
+          expect(decision.passCandidate).toBe(true);
+          expect(decision.cue).toBeTruthy();
+        } else {
+          expect(decision.reason, fixture.arxivId).toBe(fixture.expectedReason);
+        }
       }
     }
   });
@@ -140,14 +148,25 @@ describe("Research Paper frozen validation set", () => {
     ).toBe(true);
   });
 
-  it("keeps BORDERLINE papers unpublished", () => {
+  it("keeps R1–R3 rejects unpublished; R4 taxonomy papers can publish without R5", () => {
     const borderline = locked.filter((paper) => paper.expectedLabel === "BORDERLINE");
     expect(borderline.length).toBeGreaterThan(0);
-    for (const fixture of borderline) {
+    const r3 = borderline.filter((paper) => paper.expectedReason === "r3-incremental");
+    for (const fixture of r3) {
       expect(qualifyResearchPaper(fixture.title, fixture.abstract).publish).toBe(
         false
       );
     }
+  });
+
+  it("publishes a taxonomy agent paper that would have been Watch under R5", () => {
+    const decision = qualifyResearchPaper(
+      "An agentic workflow for computer use",
+      "An AI assistant that plans tool use across a desktop."
+    );
+    expect(decision.publish).toBe(true);
+    expect(decision.cue).toBe("Agents");
+    expect(decision.productImplication).toBe(false);
   });
 });
 

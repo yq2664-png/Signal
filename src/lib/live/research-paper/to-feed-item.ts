@@ -21,7 +21,8 @@ function paperFeedId(paper: ResearchPaper): string {
 
 export function researchPaperToFeedItem(
   paper: ResearchPaper,
-  cue?: ResearchPaperRelevanceCue
+  cue?: ResearchPaperRelevanceCue,
+  options?: { productImplication?: boolean }
 ): FeedItem {
   const finding = extractFinding(paper.title, paper.abstract);
   const item = toFeedItem({
@@ -55,6 +56,7 @@ export function researchPaperToFeedItem(
       relevanceCue: cue,
       venue: paper.venue,
       categories: paper.categories.slice(0, 3),
+      productImplication: options?.productImplication,
     },
   };
 }

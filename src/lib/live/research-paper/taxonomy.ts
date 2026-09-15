@@ -14,7 +14,7 @@ export type TaxonomyTopic =
 export type TaxonomyMatch = {
   userFacing: TaxonomyTopic[];
   background: TaxonomyTopic[];
-  /** Venue capture may union only when this is true. Never publishes. */
+  /** Venue capture may union only when this is true. Publish still uses R1–R4. */
   capture: boolean;
 };
 

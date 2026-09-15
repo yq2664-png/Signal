@@ -233,7 +233,7 @@ describe("Research Paper V1.1 capture union", () => {
 });
 
 describe("Research Paper V1.1 Watch and Review Queue", () => {
-  it("routes R4-without-R5 and capped PASS to Watch, R1–R3/R6 to Review Queue", () => {
+  it("publishes R4-without-R5 instead of Watch; capped PASS still goes to Watch", () => {
     const pass = locked.filter((paper) => paper.expectedLabel === "PASS");
     const fail = locked.filter((paper) => paper.expectedLabel === "FAIL");
     const watchCandidate: HfCaptureRecord = {
@@ -249,8 +249,9 @@ describe("Research Paper V1.1 Watch and Review Queue", () => {
       watchCandidate.title,
       watchCandidate.abstract
     );
-    expect(decision.publish).toBe(false);
+    expect(decision.publish).toBe(true);
     expect(decision.passCandidate).toBe(true);
+    expect(decision.productImplication).toBe(false);
 
     const captured = [
       ...pass.map((paper) => asCapture(paper)),
@@ -275,9 +276,12 @@ describe("Research Paper V1.1 Watch and Review Queue", () => {
 
     expect(built.items).toHaveLength(6);
     expect(built.watch.some((row) => row.decisionRule === "capped")).toBe(true);
+    const watchId = "2600.00002";
     expect(
-      built.watch.some((row) => row.arxivId === "2600.00002")
+      built.items.some((item) => item.researchPaper?.arxivId === watchId) ||
+        built.watch.some((row) => row.arxivId === watchId)
     ).toBe(true);
+    expect(built.reviewQueue.some((row) => row.arxivId === watchId)).toBe(false);
     expect(
       fail.every((paper) =>
         built.reviewQueue.some((row) => row.arxivId === paper.arxivId)
@@ -382,16 +386,15 @@ describe("Research Paper V1.1 admin queue persistence", () => {
   });
 });
 
-describe("Research Paper V1.1 venue recall (frozen gate)", () => {
-  it("lets a CHI co-design paper reach Watch without venue auto-publish", () => {
+describe("Research Paper V1.1 venue recall (R1–R3 still bind)", () => {
+  it("publishes a CHI co-design paper that matches R4", () => {
     const title =
       "Towards Considerate Embodied AI: Co-Designing Situated Multi-Site Healthcare Robots from Abstract Concepts to High-Fidelity Prototypes.";
     expect(matchTaxonomy(title, "", { hciVenue: true }).capture).toBe(true);
     const decision = qualifyResearchPaper(title, "");
     expect(decision.passCandidate).toBe(true);
-    expect(decision.publish).toBe(false);
+    expect(decision.publish).toBe(true);
     expect(decision.cue).toBe("HCI");
-    expect(decision.reason).toBe("r6-else");
   });
 
   it("still rejects a top-venue CHI paper that misses R1–R6", () => {

@@ -96,12 +96,15 @@ describe.skipIf(!live)("Research Paper V1 publication cap", () => {
   it("publishes at most 6 PASS cards through the live pipeline", async () => {
     const result = await fetchResearchPaperFeedItems({
       persistDiagnostics: false,
+      publishCap: 6,
     });
     const fatal = result.errors.filter(
       (error) => !error.startsWith("venue:") && !error.startsWith("anthology:")
     );
     expect(fatal).toEqual([]);
+    expect(result.data.length).toBeGreaterThan(0);
     expect(result.data.length).toBeLessThanOrEqual(6);
+    console.info("Paper recovery", { published: result.data.length, captured: result.capture?.unionCount, titles: result.data.map(item => item.title) });
     const ids = result.data.map((item) => item.id);
     expect(new Set(ids).size).toBe(ids.length);
     for (const item of result.data) {
