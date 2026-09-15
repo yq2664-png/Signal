@@ -63,3 +63,19 @@ it("translates topic chips and compound labels while preserving names and identi
   expect(translateUI("Python", "zh")).toBe("Python");
   expect(translateUI("Brianna Wessling", "zh")).toBe("Brianna Wessling");
 });
+
+it("covers current live editorial labels and source spelling variants", () => {
+  const expected = {
+    "Autonomous Mobile Robots (AMRs)": "自主移动机器人（AMRs）",
+    "Business Resources": "商业资源",
+    "  Autonomous-Mobile-Robots   (AMRs) ": "自主移动机器人（AMRs）",
+    "Humanoid Robots": "人形机器人",
+    "Artificial intelligence": "人工智能",
+    "Machine Learning & Data Science": "机器学习与数据科学",
+    "Arms / Manipulators": "机械臂 / 操作器",
+  };
+  for (const [label, translated] of Object.entries(expected)) {
+    expect(translateUI(label, "zh")).toBe(translated);
+    expect(translateUI(label, "en")).toBe(label);
+  }
+});

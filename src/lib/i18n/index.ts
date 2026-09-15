@@ -16,6 +16,7 @@ export function localizeItem(item: FeedItem, locale: Locale, translations: Trans
 }
 // Editorial topics are UI labels, translated immediately without a model call.
 const topicLabels: Record<string, string> = {
+  "Autonomous Mobile Robots": "自主移动机器人", "Business Resources": "商业资源",
   "Arms / Manipulators": "机械臂 / 操作器", "Actuators / Motors / Servos": "执行器 / 电机 / 伺服",
   "Humanoid-robots": "人形机器人", "Medical-robots": "医疗机器人", "Video-friday": "每周机器人视频",
   "Robotics": "机器人", "Agriculture": "农业", "Artificial Intelligence / Cognition": "人工智能 / 认知",
@@ -116,8 +117,16 @@ export const zh: Record<string, string> = {
 export function translateUI(text: string, locale: Locale): string {
   if (locale === "en") return ({ "量子位": "QbitAI", "新智元": "AI Era", "机器之心": "Synced", "资讯": "News", "研究": "Research", "技能": "Skill" } as Record<string, string>)[text] ?? text;
   if (zh[text]) return zh[text];
-  const topic = Object.keys(topicLabels).find(key => key.toLowerCase() === text.trim().toLowerCase());
-  if (topic) return topicLabels[topic];
+  const normalizeLabel = (value: string) => value.trim().toLowerCase().replace(/[-–—_]+/g, " ").replace(/\s+/g, " ");
+  const labelDictionary = { ...topicLabels, ...zh };
+  const label = Object.keys(labelDictionary).find(key => normalizeLabel(key) === normalizeLabel(text));
+  if (label) return labelDictionary[label];
+  // Source taxonomy labels often add an acronym; translate the name, retain it.
+  const acronym = text.trim().match(/^(.+?)\s*\(([A-Z][A-Za-z0-9-]*)\)$/);
+  if (acronym) {
+    const translated = translateUI(acronym[1], locale);
+    if (translated !== acronym[1]) return `${translated}（${acronym[2]}）`;
+  }
   const libraryLabel = text.replace(/^(\d+) liked · synced to /, "$1 条喜欢 · 已同步至 ")
     .replace(/^(\d+) saved · synced to /, "$1 条收藏 · 已同步至 ");
   if (libraryLabel !== text) return libraryLabel;
